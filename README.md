@@ -22,7 +22,7 @@ From Scratch OpenGL Game and ML Agent/Enemy
 # TODOs:
 - Create Enemy Chase Action with A* Algorithm (TODO)
 - Refactoring : Code Organization (TODO)
-- Check QuadTree for Collision Detection(IF IT IS NECESSARY) (Tutorial Maybe)
+- Check QuadTree for Collision Detection(IF IT IS NECESSARY)
 - Bullet Collection (TODO)
 - Enemy Health (TODO)
 - Enemy Bullet Collection (TODO)
