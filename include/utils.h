@@ -2,19 +2,21 @@
 #define __UTILS_H_
 
 #include <iostream>
-#include <set>
+#include <unordered_set>
 #include <vector>
 #include <queue>
 #include <memory>
+#include <cmath>
+#include <cstdint>
 
 #include "Vector2.h"
 #include "point.h"
 #include "Maze.h"
 
-#define WIDTH 800
-#define HEIGHT 800
-#define DELAY_NUMBER 10000000
-#define Updates_Per_Second 60
+typedef std::vector<std::vector<std::shared_ptr<Point>>> shared_point_matrix;
+typedef std::vector<std::vector<TileType>> tile_type_matrix;
+
+namespace utility{
 
 static inline unsigned char * readImage(const char *filename, int width, int height){
     unsigned char *imageData;
@@ -48,22 +50,49 @@ static inline bool isInMatrix(T min_col, T min_row, T max_col, T max_row, Vector
     return coord.x >= min_col && coord.x <= max_col && coord.y >= min_row && coord.y <= max_row;
 }
 
-//TODO : FEELS LIKE NOT WELL OPTIMIZED FOR MEMORY -> WILL TEST THE MEMORY(Shared Memory Restricted)
-static inline std::vector<Vector2<int>> findRoute(std::vector<std::vector<TileType>> matrix,
-                                                  std::vector<std::vector<std::shared_ptr<Point>>> grid,
+static inline std::vector<Vector2<int>> findRoute(tile_type_matrix matrix,
+                                                  shared_point_matrix grid,
                                                   Vector2<int> start, Vector2<int> end){
-
     std::vector<Vector2<int>> route;
     //A* Algorithm
+    Vector2<int> destination = end;
+
+    // Offset based player tile position correction
+    if(matrix[destination.x][destination.y] == Wall){
+        if(destination.x - 1 > 0){
+            if(matrix[destination.x - 1][destination.y] != Wall){
+                destination.x -= 1;
+            }
+            else if(destination.y + 1 < matrix[0].size()){
+                if(matrix[destination.x - 1][destination.y + 1] != Wall){
+                    destination.x -= 1;
+                    destination.y += 1;
+                }
+                else if(matrix[destination.x][destination.y + 1] != Wall){
+                    destination.y += 1;
+                }
+            }
+        }
+        else{
+            if(destination.y + 1 < matrix[0].size()){
+                if(matrix[destination.x][destination.y + 1] != Wall){
+                    destination.y += 1;
+                }
+            }
+        }
+    }
+
     //SET FOR THE CHECK
-    std::set<std::shared_ptr<Point>> closedSet; 
+    std::unordered_set<std::shared_ptr<Point>> closedSet; 
+    
     //CHECK SET FOR CLOSED POINTS
-    std::set<std::shared_ptr<Point>> openSetContains;
+    std::unordered_set<std::shared_ptr<Point>> openSetContains;
+
     //PRIORTY QUEUE FOR THE NEXT STEPS
     std::priority_queue<std::shared_ptr<Point>, std::vector<std::shared_ptr<Point>>, ComparePointPQ> openSet;
 
     std::shared_ptr<Point> startVertex = std::make_shared<Point>(start);
-    std::shared_ptr<Point> destVertex = std::make_shared<Point>(end);
+    std::shared_ptr<Point> destVertex = std::make_shared<Point>(destination);
 
     openSet.push(startVertex); //Push First Point
 
@@ -88,42 +117,123 @@ static inline std::vector<Vector2<int>> findRoute(std::vector<std::vector<TileTy
         //Look Neigbours
         std::vector<std::shared_ptr<Point>> neighbours;
 
-        std::shared_ptr<Point> ng1 = grid[currentVertex->coord.x - 1][ currentVertex->coord.y];
-        if (closedSet.find(ng1) == closedSet.end() && matrix[ng1->coord.x][ng1->coord.y] == Empty && isInMatrix<int>(0, 0, max_row, max_col, ng1->coord)){
-            neighbours.push_back(ng1);
+        if( isInMatrix<int>(0, 0, max_row, max_col, Vector2<int>(currentVertex->coord.x - 1, currentVertex->coord.y))){
+            std::shared_ptr<Point> ng1 = grid[currentVertex->coord.x - 1][ currentVertex->coord.y];
+            if (closedSet.find(ng1) == closedSet.end() && 
+                (matrix[ng1->coord.x][ng1->coord.y] == Empty || matrix[ng1->coord.x][ng1->coord.y] == Teleport)){
+                neighbours.push_back(ng1);
+            }
         }
-            
-        std::shared_ptr<Point> ng2 = grid[currentVertex->coord.x][ currentVertex->coord.y - 1];
-        if (closedSet.find(ng2) == closedSet.end() && matrix[ng2->coord.x][ng2->coord.y] == Empty && isInMatrix<int>(0, 0, max_row, max_col, ng2->coord)){
-            neighbours.push_back(ng2);
+
+        if( isInMatrix<int>(0, 0, max_row, max_col, Vector2<int>(currentVertex->coord.x, currentVertex->coord.y - 1))){
+            std::shared_ptr<Point> ng2 = grid[currentVertex->coord.x][ currentVertex->coord.y - 1];
+            if (closedSet.find(ng2) == closedSet.end() && 
+                (matrix[ng2->coord.x][ng2->coord.y] == Empty || matrix[ng2->coord.x][ng2->coord.y] == Teleport)){
+                neighbours.push_back(ng2);
+            }
         }
-            
-        std::shared_ptr<Point> ng3 = grid[currentVertex->coord.x + 1][ currentVertex->coord.y];
-        if (closedSet.find(ng3) == closedSet.end() && matrix[ng3->coord.x][ng3->coord.y] == Empty && isInMatrix<int>(0, 0, max_row, max_col, ng3->coord)){
-            neighbours.push_back(ng3);
+        
+        if (isInMatrix<int>(0, 0, max_row, max_col, Vector2<int>(currentVertex->coord.x + 1, currentVertex->coord.y))){
+            std::shared_ptr<Point> ng3 = grid[currentVertex->coord.x + 1][ currentVertex->coord.y];
+            if (closedSet.find(ng3) == closedSet.end() && 
+                (matrix[ng3->coord.x][ng3->coord.y] == Empty || matrix[ng3->coord.x][ng3->coord.y] == Teleport)){
+                neighbours.push_back(ng3);
+            }
         }
-            
-        std::shared_ptr<Point> ng4 = grid[currentVertex->coord.x][ currentVertex->coord.y + 1];
-        if (closedSet.find(ng4) == closedSet.end() && matrix[ng4->coord.x][ng4->coord.y] == Empty && isInMatrix<int>(0, 0, max_row, max_col, ng4->coord)){
-            neighbours.push_back(ng4);
+        
+        if(isInMatrix<int>(0, 0, max_row, max_col, Vector2<int>(currentVertex->coord.x, currentVertex->coord.y + 1))){
+            std::shared_ptr<Point> ng4 = grid[currentVertex->coord.x][ currentVertex->coord.y + 1];
+            if (closedSet.find(ng4) == closedSet.end() &&
+                (matrix[ng4->coord.x][ng4->coord.y] == Empty || matrix[ng4->coord.x][ng4->coord.y] == Teleport)){
+                neighbours.push_back(ng4);
+            }
         }
-            
+        
+
         for(auto& ng : neighbours){
-            float newCostToNeighbour = currentVertex->get_g_cost() + dist_euc<int>(currentVertex->coord, ng->coord);
+            float newCostToNeighbour = currentVertex->get_g_cost() + utility::dist_euc<int>(currentVertex->coord, ng->coord);
             if(newCostToNeighbour < ng->get_g_cost() || (openSetContains.find(ng) == openSetContains.end())){
                 grid[ng->coord.x][ng->coord.y]->set_g_cost(newCostToNeighbour);
-                grid[ng->coord.x][ng->coord.y]->set_h_cost(dist_euc<int>(ng->coord, destVertex->coord));
+                grid[ng->coord.x][ng->coord.y]->set_h_cost(utility::dist_euc<int>(ng->coord, destVertex->coord));
                 grid[ng->coord.x][ng->coord.y]->calc_f_cost();
                 grid[ng->coord.x][ng->coord.y]->parent = grid[currentVertex->coord.x][currentVertex->coord.y];
 
                 if((openSetContains.find(ng) == openSetContains.end())){
-                   openSet.push(grid[ng->coord.x][ng->coord.y]); // Add to PQ
-                   openSetContains.insert(ng); // Mark It
+                openSet.push(grid[ng->coord.x][ng->coord.y]); // Add to PQ
+                openSetContains.insert(ng); // Mark It
                 }
             }
         }
     }
-    return route; //WILL LOOK THIS LATER
+    return route;
 }
 
+template <typename T>
+static inline void swap(T& x, T& y){
+    T temp = x;
+    x = y;
+    y = temp;
+}
+
+static inline bool rayCastObstacleCheck(tile_type_matrix matrix, 
+                                        Vector2<int> currentPos, Vector2<int> targetPos){
+    int x0 = currentPos.y;
+    int y0 = currentPos.x;
+
+    int x1 = targetPos.y;
+    int y1 = targetPos.x;
+
+    // RowCurrent -
+    bool steep = std::abs(y1 - y0) > std::abs(x1 - x0);
+    
+    if(steep){
+        swap<int>(x0, y0);
+        swap<int>(x1, y1);
+    }
+
+    if(x0 > x1){
+        swap<int>(x0, x1);
+        swap<int>(y0, y1);
+    }
+
+    int deltax = x1 - x0;
+    int deltay = y1 - y0;
+    int error = 0;
+
+    int ystep;
+    int y = y0;
+
+    if(y0 < y1){
+        ystep = 1;
+    }
+    else{
+        ystep = -1;
+    }
+
+    for(int x = x0; x <= x1; ++x){
+        if(steep){
+            // Check tile y, x
+            if(matrix[x][y] == Wall){
+                return false;
+            }
+        }
+        else{
+            // Check tile x, y
+            if(matrix[y][x] == Wall){
+                return false;
+            }
+        }
+
+        error += deltay;
+        
+        if(2 * deltay >= deltax){
+            y += ystep;
+            error -= deltax;
+        }
+    }
+
+    return true;
+}
+
+}
 #endif

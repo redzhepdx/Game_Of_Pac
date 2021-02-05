@@ -1,4 +1,6 @@
 #include "Maze.h"
+#include <vector>
+#include <cmath>
 
 Maze::Maze(int width, int height):width(width), height(height){
 	for(int i = 0; i < height + 1; ++i){
@@ -24,14 +26,14 @@ Maze::~Maze(){
 }
 
 TileType Maze::pos2Tile(Vector2<float> pos){
-	int row_pos = this->height - static_cast<int>(std::floor(pos.y / Square_Size));
-	int col_pos = static_cast<int>(std::floor(pos.x / Square_Size));
+	int row_pos = this->height - static_cast<int>(std::floor(pos.y / SQUARE_SIZE));
+	int col_pos = static_cast<int>(std::floor(pos.x / SQUARE_SIZE));
 	return this->matrix[row_pos % this->matrix.size()][col_pos % this->matrix.size()];
 }
 
 Vector2<int> Maze::pos2MtrCoord(Vector2<float> pos){
-	int row_pos = this->height - static_cast<int>(std::floor(pos.y / Square_Size));
-	int col_pos = static_cast<int>(std::floor(pos.x / Square_Size));
+	int row_pos = this->height - static_cast<int>(std::floor(pos.y / SQUARE_SIZE));
+	int col_pos = static_cast<int>(std::floor(pos.x / SQUARE_SIZE));
 	return Vector2<int>(row_pos, col_pos);
 }
 

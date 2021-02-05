@@ -10,6 +10,9 @@
 #include <set>
 #include <stack>
 #include <iterator>
+#include <unordered_set>
+
+#define GL_GLEXT_PROTOTYPES
 
 #include <GLFW/glfw3.h>
 #include <GL/glut.h>
@@ -18,15 +21,14 @@
 #include <bsd/stdlib.h>
 
 #include "Sprite.h"
-#include "PlayerSprite.h"
+#include "Player.h"
+#include "Enemy.h"
+#include "Projectile.h"
+
 #include "Area.h"
 #include "utils.h"
 #include "point.h"
 #include "Maze.h"
-
-
-#define RUNNING true
-#define STOPPED false
-#define Move_Size 5.0f
+#include "quadtree/Quadtree.h"
 
 #endif

@@ -7,7 +7,6 @@
 #include <limits>
 
 #include "Vector2.h"
-#include "utils.h"
 
 class Point{
 public:
@@ -47,14 +46,11 @@ public:
 	}
 
 	void calc_f_cost() { this->f_cost = this->g_cost + this->h_cost; }
-	//void calc_g_cost();
-	//void calc_h_cost(Vector2<int> target) {
-	//	this->h_cost = dist_euc<int>(this->coord, target);
-	//}
 
 	float get_h_cost(){ return this->h_cost; }
 	float get_g_cost(){ return this->g_cost; }
 	float get_f_cost(){ return this->f_cost; }
+
 	Vector2<int> getCoord(){ return this->coord; }
 
 	void set_f_cost(float f_cost){ this->f_cost = f_cost; }

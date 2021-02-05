@@ -2,30 +2,43 @@
 #define __PLAYER_SPRITE__
 
 #include <GLFW/glfw3.h>
+
 #include <iostream>
+#include <cmath>
+
 #include "Sprite.h"
 
 
-class PlayerSprite : public Sprite{
+class Player : public Sprite{
 
 private:
 	int health;
+	int score = 0;
 
 public:
 	uint bullet_count=10;
 
 public:
-	PlayerSprite();
-	PlayerSprite(uint textureBufferID, Vector2<float> position);
-	~PlayerSprite();
+	Player();
+	Player(uint textureBufferID, Vector2<float> position);
+	~Player();
+
+public:
 	void setHealth(int new_health);
-	int getHealth();
-	void setTextureBufferID(uint textureBufferID);
-    uint TextureBufferID();
-	void update(GLFWwindow* window);
 	void setArea(std::unique_ptr<Area> area);
-	std::unique_ptr<PlayerSprite> Copy();
+	void setTextureBufferID(uint textureBufferID);
+	void addScore(int points);
+
+
+	int getHealth();
 	Vector2<float> getPosition();
+	int getScore();
+
+	std::unique_ptr<Player> Copy();
+
+    uint TextureBufferID();
+	
+	void update(GLFWwindow* window);
 };
 
 #endif

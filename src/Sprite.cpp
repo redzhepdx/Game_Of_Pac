@@ -104,6 +104,7 @@ bool Sprite::checkFullCollision(Vector2<float> speed){
         bool res = (speed.x > 0) ? this->checkDirectionCollision(Right) : this->checkDirectionCollision(Left);
         return res;
     }
+    
     //Basic status idle
     return false;
 }
@@ -112,32 +113,44 @@ bool Sprite::checkDirectionCollision(Direction dir){
     //Offset for the pass between two tiles
 
     if(dir == Left){
-        Vector2<float> topLeft(this->getPosition().x - this->getVelocity().x + this->offset, this->getPosition().y + this->offset);
-        Vector2<float> bottomLeft(this->getPosition().x - this->getVelocity().x + this->offset, this->getPosition().y + Square_Size - this->offset);
+        Vector2<float> topLeft(this->getPosition().x - this->getVelocity().x + this->offset,
+                               this->getPosition().y + this->offset);
+
+        Vector2<float> bottomLeft(this->getPosition().x - this->getVelocity().x + this->offset,
+                                  this->getPosition().y + SQUARE_SIZE - this->offset);
 
         TileType tile_type_top_left = this->maze->pos2Tile(topLeft);
         TileType tile_type_bot_left = this->maze->pos2Tile(bottomLeft);
+
         return tile_type_top_left == Wall || tile_type_bot_left == Wall;
     }
     else if(dir == Right){
-        Vector2<float> topRight(this->getPosition().x + Square_Size + this->getVelocity().x - this->offset, this->getPosition().y + this->offset);
-        Vector2<float> bottomRight(this->getPosition().x + Square_Size + this->getVelocity().x - this->offset, this->getPosition().y + Square_Size - this->offset);
+        Vector2<float> topRight(this->getPosition().x + SQUARE_SIZE + this->getVelocity().x - this->offset,
+                                this->getPosition().y + this->offset);
+
+        Vector2<float> bottomRight(this->getPosition().x + SQUARE_SIZE + this->getVelocity().x - this->offset, 
+                                   this->getPosition().y + SQUARE_SIZE - this->offset);
         TileType tile_type_top_right = this->maze->pos2Tile(topRight);
         TileType tile_type_bot_right = this->maze->pos2Tile(bottomRight);
-
+        
         return tile_type_top_right == Wall || tile_type_bot_right == Wall;
     }
     else if(dir == Up){
-        Vector2<float> topLeft(this->getPosition().x + this->offset, this->getPosition().y + Square_Size + this->getVelocity().y - this->offset);
-        Vector2<float> topRight(this->getPosition().x + Square_Size - this->offset, this->getPosition().y +  Square_Size + this->getVelocity().y - this->offset);
+        Vector2<float> topLeft(this->getPosition().x + this->offset, 
+                               this->getPosition().y + SQUARE_SIZE + this->getVelocity().y - this->offset);
+        Vector2<float> topRight(this->getPosition().x + SQUARE_SIZE - this->offset, 
+                                this->getPosition().y +  SQUARE_SIZE + this->getVelocity().y - this->offset);
 
         TileType tile_type_top_left = this->maze->pos2Tile(topLeft);
         TileType tile_type_top_right = this->maze->pos2Tile(topRight);
+        
         return tile_type_top_left == Wall || tile_type_top_right == Wall;
     }
     else if(dir == Down){
-        Vector2<float> bottomLeft(this->getPosition().x + this->offset, this->getPosition().y - this->getVelocity().y + this->offset);
-        Vector2<float> bottomRight(this->getPosition().x + Square_Size - this->offset, this->getPosition().y - this->getVelocity().y + this->offset);
+        Vector2<float> bottomLeft(this->getPosition().x + this->offset,
+                                  this->getPosition().y - this->getVelocity().y + this->offset);
+        Vector2<float> bottomRight(this->getPosition().x + SQUARE_SIZE - this->offset, 
+                                   this->getPosition().y - this->getVelocity().y + this->offset);
 
         TileType tile_type_bot_left = this->maze->pos2Tile(bottomLeft);
         TileType tile_type_bot_right = this->maze->pos2Tile(bottomRight);

@@ -7,8 +7,8 @@
 #include "Vector2.h"
 #include "Area.h"
 #include "Maze.h"
-
-enum Direction { Left, Right, Up, Down};
+#include "config.h"
+#include "point.h"
 
 class Sprite{
 public:
@@ -55,6 +55,9 @@ public:
 
     void render();
     virtual void update(GLFWwindow* window);
+    virtual void update(Vector2<float> playerPos, std::vector<std::vector<std::shared_ptr<Point>>> grid){
+        
+    }
 
 };
 

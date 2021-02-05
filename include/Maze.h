@@ -4,11 +4,11 @@
 #include <iostream>
 #include <unordered_map>
 #include <memory>
+#include <vector>
 
 #include "Area.h"
 #include "Vector2.h"
-
-#define Square_Size 20
+#include "config.h"
 
 enum TileType {Empty, Wall, Obstacle, Teleport};
 

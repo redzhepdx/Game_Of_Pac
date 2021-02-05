@@ -1,73 +1,87 @@
-#include "PlayerSprite.h"
+#include "Player.h"
 
-PlayerSprite::PlayerSprite(){
+Player::Player(){
 
 }
 
-PlayerSprite::PlayerSprite(uint textureBufferID, Vector2<float> position):
+Player::Player(uint textureBufferID, Vector2<float> position):
 							Sprite(textureBufferID, position){
 }
 
-PlayerSprite::~PlayerSprite(){
+Player::~Player(){
 }
 
-void PlayerSprite::setArea(std::unique_ptr<Area> area){
+void Player::setArea(std::unique_ptr<Area> area){
 	this->area = std::move(area);
 }
 
-Vector2<float> PlayerSprite::getPosition(){
+Vector2<float> Player::getPosition(){
 	return this->position;
 }
 
-void PlayerSprite::setHealth(int new_health){
+void Player::setHealth(int new_health){
 	this->health = new_health;
 }
 
-int PlayerSprite::getHealth(){
+int Player::getHealth(){
 	return this->health;
 }
 
-void PlayerSprite::setTextureBufferID(uint textureBufferID)
+void Player::addScore(int points){
+	this->score += points;
+}
+
+int Player::getScore(){
+	return this->score;
+}
+
+void Player::setTextureBufferID(uint textureBufferID)
 {
    	Sprite::setTextureBufferID(textureBufferID);
 }
 
-uint PlayerSprite::TextureBufferID(){
+uint Player::TextureBufferID(){
     return Sprite::getTextureBufferID();
 }
 
-std::unique_ptr<PlayerSprite> PlayerSprite::Copy(){
-    std::unique_ptr<PlayerSprite> copy = std::make_unique<PlayerSprite>();
+std::unique_ptr<Player> Player::Copy(){
+    std::unique_ptr<Player> copy = std::make_unique<Player>();
 	copy->setTextureBufferID(Sprite::getTextureBufferID());
+
 	copy->position  = this->position;
     copy->velocity  = this->velocity;
+	
 	copy->setRotation(Sprite::getRotation());
 	copy->setArea(this->area->Copy());
-    return copy;
+    
+	return copy;
 }
 
-void PlayerSprite::update(GLFWwindow* window){
+void Player::update(GLFWwindow* window){
 
 	if(this->health <= 0){
-		glfwSetWindowShouldClose(window, GLFW_TRUE);
+		// glfwSetWindowShouldClose(window, GLFW_TRUE);
+		return;
 	}
 
 	if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS){
-			Vector2<float> newPos = (this->position + velocity);
-			newPos.x = this->position.x + std::sin(newPos.x) * this->getVelocity().x;
-			newPos.y = this->position.y + std::sin(newPos.y) * this->getVelocity().y;
-			this->position = newPos;
+		// Shaking algorithm for fun
+		Vector2<float> newPos = (this->position + velocity);
+		newPos.x = this->position.x + std::sin(newPos.x) * this->getVelocity().x;
+		newPos.y = this->position.y + std::sin(newPos.y) * this->getVelocity().y;
+		this->position = newPos;
 	}
 
 	if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS){
 		//Go Right
 		Vector2<float> direction(this->velocity.x, 0.0f);
 		if(!this->checkDirectionCollision(Right)){
-			if(this->position.x < this->area->Box->right - Square_Size / 1.0f){
+			if(this->position.x < this->area->Box->right - SQUARE_SIZE / 1.0f){
 				this->position += direction;
 			}
 			else if(this->maze->pos2Tile(Vector2<float>(this->area->Box->left, this->position.y)) == Teleport){
-				this->position.x = this->area->Box->left + 5.0f;
+				this->position.x = this->area->Box->left + (SQUARE_SIZE * 0.75);
+				this->position.y = (int)(this->position.y / SQUARE_SIZE) * SQUARE_SIZE;
 			}
 		}
 	}
@@ -76,11 +90,12 @@ void PlayerSprite::update(GLFWwindow* window){
 		//Go Up
 		Vector2<float> direction(0.0f, this->velocity.y);
 		if(!this->checkDirectionCollision(Up)){
-			if(this->position.y < this->area->Box->top - Square_Size / 1.0f){
+			if(this->position.y < this->area->Box->top - SQUARE_SIZE / 1.0f){
 				this->position += direction;
 			}
 			else if(this->maze->pos2Tile(Vector2<float>(this->position.x, this->area->Box->bottom)) == Teleport){
-				this->position.y = this->area->Box->bottom + 5.0f;
+				this->position.y = this->area->Box->bottom + (SQUARE_SIZE * 0.75);
+				this->position.x = (int)(this->position.x / SQUARE_SIZE) * SQUARE_SIZE;
 			}
 		}
 	}
@@ -89,12 +104,13 @@ void PlayerSprite::update(GLFWwindow* window){
 		//Go Down
 		Vector2<float> direction(0.0f, this->velocity.y);
 		if(!this->checkDirectionCollision(Down)){
-			if(this->position.y > this->area->Box->bottom + Square_Size / 1.0f){
+			if(this->position.y > this->area->Box->bottom + SQUARE_SIZE / 1.0f){
 				this->position -= direction;
 			}
-			else if(this->maze->pos2Tile(Vector2<float>(this->position.x, this->area->Box->top)) == Empty){
+			else if(this->maze->pos2Tile(Vector2<float>(this->position.x, this->area->Box->top)) == Teleport){
 
-				this->position.y = this->area->Box->top - 5.0f;
+				this->position.y = this->area->Box->top - (SQUARE_SIZE * 0.75);
+				this->position.x = (int)(this->position.x / SQUARE_SIZE) * SQUARE_SIZE;
 			}
 		}
 	}
@@ -103,11 +119,12 @@ void PlayerSprite::update(GLFWwindow* window){
 		//Go Left
 		Vector2<float> direction(this->velocity.x, 0.0f);
 		if(!this->checkDirectionCollision(Left)){
-			if(this->position.x > this->area->Box->left + Square_Size / 1.0f){
+			if(this->position.x > this->area->Box->left + SQUARE_SIZE / 1.0f){
 				this->position -= direction;
 			}
-			else if(this->maze->pos2Tile(Vector2<float>(this->area->Box->right, this->position.y)) == Empty){
-				this->position.x = this->area->Box->right - 5.0f;
+			else if(this->maze->pos2Tile(Vector2<float>(this->area->Box->right, this->position.y)) == Teleport){
+				this->position.x = this->area->Box->right - (SQUARE_SIZE * 0.75);
+				this->position.y = (int)(this->position.y / SQUARE_SIZE) * SQUARE_SIZE;
 			}
 		}
 	}
@@ -127,4 +144,5 @@ void PlayerSprite::update(GLFWwindow* window){
 			this->bullet_count = 10;
 	}
 
+	// TODO : Teleport
 }
