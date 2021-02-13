@@ -100,7 +100,7 @@ void GameWindow::setupGL(){
 }
 
 void GameWindow::setupImageBuffers(){
-    textureBufferID = loadAndBufferImage("files/enemy.png", 100, 100);
+    textureBufferID = loadAndBufferImage("files/player.png", 100, 100);
     textureBulletID = loadAndBufferImage("files/bullet_2.png", 100, 100);
     textureEnemyID  = loadAndBufferImage("files/boss.png", 100, 100);
     textureTileID   = loadAndBufferImage("files/tile.png", 100, 100);
