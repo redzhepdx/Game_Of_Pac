@@ -41,6 +41,13 @@ template Vector2<float> Vector2<float>::normalize();
 template Vector2<int> Vector2<int>::normalize();
 
 template <typename T>
+float Vector2<T>::angle() const{
+	return std::atan2((double)this->y, (double) this->x) / M_PI * 180.0;
+}
+template float Vector2<float>::angle() const;
+template float Vector2<int>::angle() const;
+
+template <typename T>
 Vector2<T> Vector2<T>::operator+(const Vector2<T> &other) const{
 	Vector2<T> new_vector(0, 0);
 	new_vector.x = this->x + other.x;

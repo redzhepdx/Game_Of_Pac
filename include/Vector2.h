@@ -44,6 +44,7 @@ public:
 
 	T magnitute() const;
 	Vector2<T> normalize();
+	float angle() const;
 
 	Vector2<T> operator+(const Vector2<T> &other) const;
 	Vector2<T> operator-(const Vector2<T> &other) const;

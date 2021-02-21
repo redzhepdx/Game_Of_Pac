@@ -44,7 +44,7 @@ constexpr float OBJECT_OFFSET = 5.0f;
 constexpr int ENEMY_COUNT             = 6;
 constexpr int ENEMY_DESTROY_POINTS    = 10;
 constexpr uint MAX_ENEMY_COUNT        = 25;
-constexpr float SNIPER_SIGHT_DISTANCE = 100.0f;
+constexpr float SNIPER_SIGHT_DISTANCE = 300.0f;
 
 // Texture Settings
 constexpr VertexData VERTICES[4] = {

@@ -203,6 +203,19 @@ void Enemy::sniperUpdate(Vector2<float> playerPos, shared_point_matrix grid){
 	// TODO : Coming Soon
 	float distance = utility::dist_euc<float>(position, playerPos);
 
+	// Action Status Check
+	if(m_actionTicks >= ENEMY_FIRE_TICKS)
+	{
+		// It can attack, but reset ticks
+		resetAction();
+	}
+	else{
+		// Reloading ticks
+		++m_actionTicks;
+	}
+
+	bool ray_cast_result = true;
+
 	if(distance < SNIPER_SIGHT_DISTANCE){
 		// Ray cast and check the line is free
 		Vector2<int> playerTilePos = maze->pos2MtrCoord(playerPos);
@@ -213,16 +226,16 @@ void Enemy::sniperUpdate(Vector2<float> playerPos, shared_point_matrix grid){
 		if(isSightOpen){
 			// Shoot
 			on_action &= true;
+			ray_cast_result = true;
+		}
+		else{
+			on_action &= false;
+			ray_cast_result = false;
 		}
 	}
-
-	// Action Status Check
-	if(m_actionTicks >= ENEMY_FIRE_TICKS)
-		// It can attack, but reset ticks
-		resetAction();
-	else
-		// Reloading ticks
-		++m_actionTicks;
+	else{
+		on_action = false;
+	}
 }
 
 void Enemy::suicideBomberUpdate(Vector2<float> playerPos, shared_point_matrix grid){

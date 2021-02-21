@@ -197,7 +197,7 @@ static inline bool rayCastObstacleCheck(tile_type_matrix matrix,
     }
 
     int deltax = x1 - x0;
-    int deltay = y1 - y0;
+    int deltay = std::abs(y1 - y0);
     int error = 0;
 
     int ystep;
@@ -226,7 +226,7 @@ static inline bool rayCastObstacleCheck(tile_type_matrix matrix,
 
         error += deltay;
         
-        if(2 * deltay >= deltax){
+        if(2 * error >= deltax){
             y += ystep;
             error -= deltax;
         }

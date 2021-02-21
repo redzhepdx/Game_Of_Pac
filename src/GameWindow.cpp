@@ -227,12 +227,16 @@ void GameWindow::generateExitPoints(){
     int max_col = static_cast<int>(height / SQUARE_SIZE) - 1;
 
     // Random Teleport Tile Selection
-    Vector2<int> up_exit_tile(min_row, static_cast<int>(arc4random() % (uint32_t)max_col - 2) + 1);
-    Vector2<int> down_exit_tile(max_row, up_exit_tile.y);
+    // TODO BETTER LOGIC
+    int vertical_teleport_pos   = static_cast<int>((arc4random() % (max_col - 2)) + 1);
+    int horizontal_teleport_pos = static_cast<int>((arc4random() % (max_row - 1)) + 1); 
 
-    Vector2<int> left_exit_tile(static_cast<int>(arc4random() % (uint32_t)max_row), min_col);
-    Vector2<int> right_exit_tile(left_exit_tile.x, max_col);
-    
+    Vector2<int> up_exit_tile(min_row, vertical_teleport_pos);
+    Vector2<int> down_exit_tile(max_row, vertical_teleport_pos);
+
+    Vector2<int> left_exit_tile(horizontal_teleport_pos, min_col);
+    Vector2<int> right_exit_tile(horizontal_teleport_pos, max_col);
+
     exit_tiles.push_back(up_exit_tile);
     exit_tiles.push_back(down_exit_tile);
     exit_tiles.push_back(right_exit_tile);
@@ -371,6 +375,8 @@ void GameWindow::fireEnemyBullet(Vector2<float> enemyPosition, Vector2<float> di
     enemyBullet->setArea(game_area->Copy());
     enemyBullet->setMaze(maze->Copy());
     enemyBullet->setOffset(OBJECT_OFFSET);
+
+    enemyBullet->setRotation(direction.angle());
 
     enemyBulletInstances.push_back(std::move(enemyBullet));
 }
@@ -702,6 +708,11 @@ void GameWindow::update(GLFWwindow* window){
     }
 
     rocket->update(window);
+    
+    // Random Restart Check!
+    if(glfwGetKey(window, GLFW_KEY_U) == GLFW_TRUE){
+        restart(window);
+    }
 }
 
 void GameWindow::removeBullets(std::vector<unsigned int>& bulletsToDestroy, bool enemy){
