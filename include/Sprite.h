@@ -12,19 +12,19 @@
 
 class Sprite{
 public:
-    float rot_speed = 10.0;
+    float m_RotationSpeed = 10.0;
 
 private:
-    uint textureBufferID;
+    uint m_TextureBufferID;
 
 protected:
-    std::unique_ptr<Area> area;
-    std::unique_ptr<Maze> maze;
+    std::unique_ptr<Area> m_Area;
+    std::unique_ptr<Maze> m_Maze;
 
-    float rot_angle;
-    float offset = 0.0f;
-    Vector2<float> velocity;
-    Vector2<float> position;
+    float m_RotationAngle;
+    float m_Offset = 0.0f;
+    Vector2<float> m_Velocity;
+    Vector2<float> m_Position;
 
 public:
     Sprite();

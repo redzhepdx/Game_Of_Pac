@@ -37,56 +37,54 @@ class GameWindow{
 private:
 
     // The Game is on?
-    bool status;
+    bool m_Status;
 
     // Window specs
-    int width;
-    int height;
+    int m_Width;
+    int m_Height;
 
     // Total number of wall cells       
-    int maxTileCount;
+    int m_MaxTileCount;
 
     // Texture IDs
-    uint vertexBufferID;
-    uint textureBufferID;
-    uint textureBulletID;
-    uint textureTileID;
-    uint textureEnemyID;
-    uint textureTpID;
+    uint m_VertexBufferID;
+    uint m_TextureBufferID;
+    uint m_TextureBulletID;
+    uint m_TextureTileID;
+    uint m_TextureEnemyID;
+    uint m_TextureTpID;
 
     // Total number of enemies
-    uint enemyCount = ENEMY_COUNT;
-    uint enemySpawnDistance = MAX_ENEMY_SPAWN_DISTANCE;
+    uint m_EnemyCount = ENEMY_COUNT;
+    uint m_EnemySpawnDistance = MAX_ENEMY_SPAWN_DISTANCE;
 
     std::unique_ptr<EnemyConfig> m_EnemyConfig;
 
     // Game Control Settings
-    float x            = 0.0f;
-    float y            = 0.0f;
-    float tile_percent = 0.55f;
+    float m_TilePercent = 0.55f;
 
     // Timers
-    int spawnTicks     = 0;
-    int fireTicks      = 0;
+    int m_SpawnTicks     = 0;
+    int m_FireTicks      = 0;
 
     // Instances to render
-    std::vector<std::unique_ptr<Projectile>> bulletInstances;
+    std::vector<std::unique_ptr<Projectile>> m_BulletInstances;
     
-    std::vector<std::unique_ptr<Enemy>> enemyInstances;
-    std::vector<std::unique_ptr<Projectile>> enemyBulletInstances;
+    std::vector<std::unique_ptr<Enemy>> m_EnemyInstances;
+    std::vector<std::unique_ptr<Projectile>> m_EnemyBulletInstances;
 
-    std::vector<std::unique_ptr<Sprite>> tiles;
+    std::vector<std::unique_ptr<Sprite>> m_Tiles;
     
     // Grid locations of empty tiles
-    std::vector<Vector2<int>> emptyTiles;
+    std::vector<Vector2<int>> m_EmptyTiles;
 
-    std::unique_ptr<Player> rocket; // Player
-    std::unique_ptr<Area> game_area;
-    std::unique_ptr<Maze> maze;
+    std::unique_ptr<Player> m_Player; // Player
+    std::unique_ptr<Area> m_GameArena;
+    std::unique_ptr<Maze> m_Maze;
     
-    shared_point_matrix grid; // Special grid for pathfinding
+    shared_point_matrix m_Grid; // Special grid for pathfinding
     
-    std::unique_ptr<t_quadTree> quadTree; // Quad tree for collision detection
+    std::unique_ptr<t_quadTree> m_QuadTree; // Quad tree for collision detection
 
 private:
     // Setup Functions

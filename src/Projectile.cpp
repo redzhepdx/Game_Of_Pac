@@ -6,31 +6,31 @@ Projectile::Projectile(){
 
 Projectile::Projectile(uint textureBufferID, Vector2<float> position):
 							Sprite(textureBufferID, position){
-	type = PlayerBullet;
+	m_Type = PlayerBullet;
 }
 
 Projectile::Projectile(uint textureBufferID, Vector2<float> position, BulletType type):
 							Sprite(textureBufferID, position){
-	this->type = type;
+	this->m_Type = type;
 }
 
 Projectile::~Projectile(){
 }
 
 void Projectile::setArea(std::unique_ptr<Area> area){
-	this->area = std::move(area);
+	this->m_Area = std::move(area);
 }
 
 Vector2<float> Projectile::getPosition(){
-	return this->position;
+	return this->m_Position;
 }
 
 void Projectile::setHealth(int new_health){
-	this->health = new_health;
+	this->m_Health = new_health;
 }
 
 int Projectile::getHealth(){
-	return this->health;
+	return this->m_Health;
 }
 
 void Projectile::setTextureBufferID(uint textureBufferID)
@@ -43,23 +43,23 @@ uint Projectile::TextureBufferID(){
 }
 
 BulletType Projectile::getType(){
-	return this->type;
+	return this->m_Type;
 }
 
 void Projectile::setType(BulletType targetType){
-	this->type = targetType;
+	this->m_Type = targetType;
 }
 
 std::unique_ptr<Projectile> Projectile::Copy(){
     std::unique_ptr<Projectile> copy = std::make_unique<Projectile>();
 	copy->setTextureBufferID(Sprite::getTextureBufferID());
 	
-	copy->position  = this->position;
-    copy->velocity  = this->velocity;
-    copy->type      = this->type;
+	copy->m_Position  = this->m_Position;
+    copy->m_Velocity  = this->m_Velocity;
+    copy->m_Type      = this->m_Type;
 
 	copy->setRotation(Sprite::getRotation());
-	copy->setArea(this->area->Copy());
+	copy->setArea(this->m_Area->Copy());
     return copy;
 }
 

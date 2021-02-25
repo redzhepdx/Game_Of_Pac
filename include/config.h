@@ -20,6 +20,7 @@ constexpr float DELTA_TIME_THRESHOLD = 1.0f;
 constexpr int ENEMY_SPAWN_TICKS = 60;
 constexpr int ENEMY_FIRE_TICKS  = 60;
 constexpr int PLAYER_FIRE_TICKS = 30;
+constexpr int PLAYER_TP_TICKS   = 300;
 
 // Game logging settings
 constexpr bool RUNNING   = true;
@@ -41,7 +42,7 @@ constexpr float BULLET_SPEED  = 5.0f;
 constexpr float OBJECT_OFFSET = 5.0f;
 
 // Enemy Settings
-constexpr int ENEMY_COUNT             = 6;
+constexpr int ENEMY_COUNT             = 20;
 constexpr int ENEMY_DESTROY_POINTS    = 10;
 constexpr uint MAX_ENEMY_COUNT        = 25;
 constexpr float SNIPER_SIGHT_DISTANCE = 300.0f;

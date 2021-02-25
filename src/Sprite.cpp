@@ -5,78 +5,78 @@ Sprite::Sprite(){
 }
 
 Sprite::Sprite(uint textureBufferID, Vector2<float> position){
-    this->textureBufferID = textureBufferID;
-    this->position        = position;
-    this->rot_angle       = 0.0f;
+    this->m_TextureBufferID = textureBufferID;
+    this->m_Position        = position;
+    this->m_RotationAngle       = 0.0f;
     //Set velocity to zero because it can get random value from random memory space
-    this->velocity        = Vector2<float>(0.0f, 0.0f);
+    this->m_Velocity        = Vector2<float>(0.0f, 0.0f);
 }
 
 void Sprite::setArea(std::unique_ptr<Area> area){
-    this->area = std::move(area);
+    this->m_Area = std::move(area);
 }
 
 void Sprite::setMaze(std::unique_ptr<Maze> maze){
-    this->maze = std::move(maze);
+    this->m_Maze = std::move(maze);
 }
 
 void Sprite::setOffset(float offset)
 {
-    this->offset = offset;
+    this->m_Offset = offset;
 }
 
 void Sprite::setRotation(float rotation){
-    this->rot_angle = rotation;
+    this->m_RotationAngle = rotation;
 }
 
 float Sprite::getRotation(){
-    return this->rot_angle;
+    return this->m_RotationAngle;
 }
 
 void Sprite::setTextureBufferID(uint textureBufferID)
 {
-    this->textureBufferID = textureBufferID;
+    this->m_TextureBufferID = textureBufferID;
 }
 
 uint Sprite::getTextureBufferID(){
-    return this->textureBufferID;
+    return this->m_TextureBufferID;
 }
 
 void Sprite::setPosition(Vector2<float> newPosition){
-    this->position = position;
+    this->m_Position = m_Position;
 }
 
 Vector2<float> Sprite::getPosition(){
-    return this->position;
+    return this->m_Position;
 }
 
 void Sprite::setVelocity(Vector2<float> newVelocity){
-    this->velocity = newVelocity;
+    this->m_Velocity = newVelocity;
 }
 
 Vector2<float> Sprite::getVelocity(){
-    return this->velocity;
+    return this->m_Velocity;
 }
 
 void Sprite::render(){
-    glBindTexture(GL_TEXTURE_2D, this->textureBufferID);
+    glBindTexture(GL_TEXTURE_2D, this->m_TextureBufferID);
 
     /*Rotation*/
     glMatrixMode(GL_TEXTURE);
     glLoadIdentity();
     glTranslatef(0.5, 0.5, 0.0);
-    glRotatef(this->rot_angle, 0.0, 0.0, 1.0);
+    glRotatef(this->m_RotationAngle, 0.0, 0.0, 1.0);
     glTranslatef(-0.5, -0.5, 0.0);
     glMatrixMode(GL_MODELVIEW);
 
     /*Translation*/
     glLoadIdentity();
-    glTranslatef(this->position.x, this->position.y, 0);
+    glTranslatef(this->m_Position.x, this->m_Position.y, 0);
     glDrawArrays(GL_QUADS, 0, 4);
 }
 
 void Sprite::update(GLFWwindow* window){
-    this->position += this->velocity;
+    this->m_Position += this->m_Velocity;
 }
 
 bool Sprite::checkFullCollision(Vector2<float> speed){
@@ -113,47 +113,47 @@ bool Sprite::checkDirectionCollision(Direction dir){
     //Offset for the pass between two tiles
 
     if(dir == Left){
-        Vector2<float> topLeft(this->getPosition().x - this->getVelocity().x + this->offset,
-                               this->getPosition().y + this->offset);
+        Vector2<float> topLeft(this->getPosition().x - this->getVelocity().x + this->m_Offset,
+                               this->getPosition().y + this->m_Offset);
 
-        Vector2<float> bottomLeft(this->getPosition().x - this->getVelocity().x + this->offset,
-                                  this->getPosition().y + SQUARE_SIZE - this->offset);
+        Vector2<float> bottomLeft(this->getPosition().x - this->getVelocity().x + this->m_Offset,
+                                  this->getPosition().y + SQUARE_SIZE - this->m_Offset);
 
-        TileType tile_type_top_left = this->maze->pos2Tile(topLeft);
-        TileType tile_type_bot_left = this->maze->pos2Tile(bottomLeft);
+        TileType tile_type_top_left = this->m_Maze->pos2Tile(topLeft);
+        TileType tile_type_bot_left = this->m_Maze->pos2Tile(bottomLeft);
 
         return tile_type_top_left == Wall || tile_type_bot_left == Wall;
     }
     else if(dir == Right){
-        Vector2<float> topRight(this->getPosition().x + SQUARE_SIZE + this->getVelocity().x - this->offset,
-                                this->getPosition().y + this->offset);
+        Vector2<float> topRight(this->getPosition().x + SQUARE_SIZE + this->getVelocity().x - this->m_Offset,
+                                this->getPosition().y + this->m_Offset);
 
-        Vector2<float> bottomRight(this->getPosition().x + SQUARE_SIZE + this->getVelocity().x - this->offset, 
-                                   this->getPosition().y + SQUARE_SIZE - this->offset);
-        TileType tile_type_top_right = this->maze->pos2Tile(topRight);
-        TileType tile_type_bot_right = this->maze->pos2Tile(bottomRight);
+        Vector2<float> bottomRight(this->getPosition().x + SQUARE_SIZE + this->getVelocity().x - this->m_Offset, 
+                                   this->getPosition().y + SQUARE_SIZE - this->m_Offset);
+        TileType tile_type_top_right = this->m_Maze->pos2Tile(topRight);
+        TileType tile_type_bot_right = this->m_Maze->pos2Tile(bottomRight);
         
         return tile_type_top_right == Wall || tile_type_bot_right == Wall;
     }
     else if(dir == Up){
-        Vector2<float> topLeft(this->getPosition().x + this->offset, 
-                               this->getPosition().y + SQUARE_SIZE + this->getVelocity().y - this->offset);
-        Vector2<float> topRight(this->getPosition().x + SQUARE_SIZE - this->offset, 
-                                this->getPosition().y +  SQUARE_SIZE + this->getVelocity().y - this->offset);
+        Vector2<float> topLeft(this->getPosition().x + this->m_Offset, 
+                               this->getPosition().y + SQUARE_SIZE + this->getVelocity().y - this->m_Offset);
+        Vector2<float> topRight(this->getPosition().x + SQUARE_SIZE - this->m_Offset, 
+                                this->getPosition().y +  SQUARE_SIZE + this->getVelocity().y - this->m_Offset);
 
-        TileType tile_type_top_left = this->maze->pos2Tile(topLeft);
-        TileType tile_type_top_right = this->maze->pos2Tile(topRight);
+        TileType tile_type_top_left = this->m_Maze->pos2Tile(topLeft);
+        TileType tile_type_top_right = this->m_Maze->pos2Tile(topRight);
         
         return tile_type_top_left == Wall || tile_type_top_right == Wall;
     }
     else if(dir == Down){
-        Vector2<float> bottomLeft(this->getPosition().x + this->offset,
-                                  this->getPosition().y - this->getVelocity().y + this->offset);
-        Vector2<float> bottomRight(this->getPosition().x + SQUARE_SIZE - this->offset, 
-                                   this->getPosition().y - this->getVelocity().y + this->offset);
+        Vector2<float> bottomLeft(this->getPosition().x + this->m_Offset,
+                                  this->getPosition().y - this->getVelocity().y + this->m_Offset);
+        Vector2<float> bottomRight(this->getPosition().x + SQUARE_SIZE - this->m_Offset, 
+                                   this->getPosition().y - this->getVelocity().y + this->m_Offset);
 
-        TileType tile_type_bot_left = this->maze->pos2Tile(bottomLeft);
-        TileType tile_type_bot_right = this->maze->pos2Tile(bottomRight);
+        TileType tile_type_bot_left = this->m_Maze->pos2Tile(bottomLeft);
+        TileType tile_type_bot_right = this->m_Maze->pos2Tile(bottomRight);
 
         return tile_type_bot_left == Wall || tile_type_bot_right == Wall;
     }
@@ -162,8 +162,8 @@ bool Sprite::checkDirectionCollision(Direction dir){
 }
 
 std::unique_ptr<Sprite> Sprite::Copy(){
-    std::unique_ptr<Sprite> copy = std::make_unique<Sprite>(this->textureBufferID, this->position);
-    copy->velocity  = this->velocity;
-    copy->rot_angle = this->rot_angle;
+    std::unique_ptr<Sprite> copy = std::make_unique<Sprite>(this->m_TextureBufferID, this->m_Position);
+    copy->m_Velocity  = this->m_Velocity;
+    copy->m_RotationAngle = this->m_RotationAngle;
     return copy;
 }

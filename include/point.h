@@ -10,8 +10,8 @@
 
 class Point{
 public:
-	Vector2<int> coord;
-	std::shared_ptr<Point> parent;
+	Vector2<int> m_Coordinate;
+	std::shared_ptr<Point> m_Parent;
 
 private:
 	float f_cost;
@@ -20,16 +20,16 @@ private:
 
 public:
 	Point(Vector2<int> point){
-		this->parent = nullptr;
-		this->coord  = point;
+		this->m_Parent = nullptr;
+		this->m_Coordinate  = point;
 		this->f_cost = 0.0f;
 		this->g_cost = 0.0f;
 		this->h_cost = 0.0f;
 	}
 
 	Point(){
-		this->parent = nullptr;
-		this->coord  = Vector2<int>(0,0);
+		this->m_Parent = nullptr;
+		this->m_Coordinate  = Vector2<int>(0,0);
 		this->f_cost = 0.0f;
 		this->g_cost = 0.0f;
 		this->h_cost = 0.0f;
@@ -42,7 +42,7 @@ public:
 		copy_ptr->set_g_cost(this->get_g_cost());
 		copy_ptr->set_h_cost(this->get_h_cost());
 
-		copy_ptr->parent = std::move(this->parent->Copy());
+		copy_ptr->m_Parent = std::move(this->m_Parent->Copy());
 	}
 
 	void calc_f_cost() { this->f_cost = this->g_cost + this->h_cost; }
@@ -51,21 +51,21 @@ public:
 	float get_g_cost(){ return this->g_cost; }
 	float get_f_cost(){ return this->f_cost; }
 
-	Vector2<int> getCoord(){ return this->coord; }
+	Vector2<int> getCoord(){ return this->m_Coordinate; }
 
 	void set_f_cost(float f_cost){ this->f_cost = f_cost; }
 	void set_g_cost(float g_cost){ this->g_cost = g_cost; }
 	void set_h_cost(float h_cost){ this->h_cost = h_cost; }
-	void setCoord(Vector2<int> newCoord){ this->coord = newCoord; }
+	void setCoord(Vector2<int> newCoord){ this->m_Coordinate = newCoord; }
 
 	bool operator==(const Point& rhs) const{
-		if (this->coord.x == rhs.coord.x && this->coord.y == rhs.coord.y)
+		if (this->m_Coordinate.x == rhs.m_Coordinate.x && this->m_Coordinate.y == rhs.m_Coordinate.y)
 			return true;
 		return false;
 	}
 
 	bool operator==(std::shared_ptr<Point>& rhs) const{
-		if (this->coord.x == rhs->coord.x && this->coord.y == rhs->coord.y)
+		if (this->m_Coordinate.x == rhs->m_Coordinate.x && this->m_Coordinate.y == rhs->m_Coordinate.y)
 			return true;
 		return false;
 	}
@@ -83,7 +83,7 @@ class ComparePointSET{
 public:
 	bool operator() (std::shared_ptr<Point> first, std::shared_ptr<Point> second)
     {
-		return first->coord == second->coord;
+		return first->m_Coordinate == second->m_Coordinate;
 		
 	}
 };

@@ -106,10 +106,10 @@ static inline std::vector<Vector2<int>> findRoute(tile_type_matrix matrix,
         openSetContains.insert(currentVertex); //Mark it as it is in the openSet
 
         //Retrace Route
-        if(currentVertex->coord == destVertex->coord){
-            while(currentVertex->coord != startVertex->coord){
-                route.push_back(Vector2<int>(currentVertex->coord.x, currentVertex->coord.y));
-                currentVertex = grid[currentVertex->parent->coord.x][currentVertex->parent->coord.y];
+        if(currentVertex->m_Coordinate == destVertex->m_Coordinate){
+            while(currentVertex->m_Coordinate != startVertex->m_Coordinate){
+                route.push_back(Vector2<int>(currentVertex->m_Coordinate.x, currentVertex->m_Coordinate.y));
+                currentVertex = grid[currentVertex->m_Parent->m_Coordinate.x][currentVertex->m_Parent->m_Coordinate.y];
             }
             return route;
         }
@@ -117,49 +117,49 @@ static inline std::vector<Vector2<int>> findRoute(tile_type_matrix matrix,
         //Look Neigbours
         std::vector<std::shared_ptr<Point>> neighbours;
 
-        if( isInMatrix<int>(0, 0, max_row, max_col, Vector2<int>(currentVertex->coord.x - 1, currentVertex->coord.y))){
-            std::shared_ptr<Point> ng1 = grid[currentVertex->coord.x - 1][ currentVertex->coord.y];
+        if( isInMatrix<int>(0, 0, max_row, max_col, Vector2<int>(currentVertex->m_Coordinate.x - 1, currentVertex->m_Coordinate.y))){
+            std::shared_ptr<Point> ng1 = grid[currentVertex->m_Coordinate.x - 1][ currentVertex->m_Coordinate.y];
             if (closedSet.find(ng1) == closedSet.end() && 
-                (matrix[ng1->coord.x][ng1->coord.y] == Empty || matrix[ng1->coord.x][ng1->coord.y] == Teleport)){
+                (matrix[ng1->m_Coordinate.x][ng1->m_Coordinate.y] == Empty || matrix[ng1->m_Coordinate.x][ng1->m_Coordinate.y] == Teleport)){
                 neighbours.push_back(ng1);
             }
         }
 
-        if( isInMatrix<int>(0, 0, max_row, max_col, Vector2<int>(currentVertex->coord.x, currentVertex->coord.y - 1))){
-            std::shared_ptr<Point> ng2 = grid[currentVertex->coord.x][ currentVertex->coord.y - 1];
+        if( isInMatrix<int>(0, 0, max_row, max_col, Vector2<int>(currentVertex->m_Coordinate.x, currentVertex->m_Coordinate.y - 1))){
+            std::shared_ptr<Point> ng2 = grid[currentVertex->m_Coordinate.x][ currentVertex->m_Coordinate.y - 1];
             if (closedSet.find(ng2) == closedSet.end() && 
-                (matrix[ng2->coord.x][ng2->coord.y] == Empty || matrix[ng2->coord.x][ng2->coord.y] == Teleport)){
+                (matrix[ng2->m_Coordinate.x][ng2->m_Coordinate.y] == Empty || matrix[ng2->m_Coordinate.x][ng2->m_Coordinate.y] == Teleport)){
                 neighbours.push_back(ng2);
             }
         }
         
-        if (isInMatrix<int>(0, 0, max_row, max_col, Vector2<int>(currentVertex->coord.x + 1, currentVertex->coord.y))){
-            std::shared_ptr<Point> ng3 = grid[currentVertex->coord.x + 1][ currentVertex->coord.y];
+        if (isInMatrix<int>(0, 0, max_row, max_col, Vector2<int>(currentVertex->m_Coordinate.x + 1, currentVertex->m_Coordinate.y))){
+            std::shared_ptr<Point> ng3 = grid[currentVertex->m_Coordinate.x + 1][ currentVertex->m_Coordinate.y];
             if (closedSet.find(ng3) == closedSet.end() && 
-                (matrix[ng3->coord.x][ng3->coord.y] == Empty || matrix[ng3->coord.x][ng3->coord.y] == Teleport)){
+                (matrix[ng3->m_Coordinate.x][ng3->m_Coordinate.y] == Empty || matrix[ng3->m_Coordinate.x][ng3->m_Coordinate.y] == Teleport)){
                 neighbours.push_back(ng3);
             }
         }
         
-        if(isInMatrix<int>(0, 0, max_row, max_col, Vector2<int>(currentVertex->coord.x, currentVertex->coord.y + 1))){
-            std::shared_ptr<Point> ng4 = grid[currentVertex->coord.x][ currentVertex->coord.y + 1];
+        if(isInMatrix<int>(0, 0, max_row, max_col, Vector2<int>(currentVertex->m_Coordinate.x, currentVertex->m_Coordinate.y + 1))){
+            std::shared_ptr<Point> ng4 = grid[currentVertex->m_Coordinate.x][ currentVertex->m_Coordinate.y + 1];
             if (closedSet.find(ng4) == closedSet.end() &&
-                (matrix[ng4->coord.x][ng4->coord.y] == Empty || matrix[ng4->coord.x][ng4->coord.y] == Teleport)){
+                (matrix[ng4->m_Coordinate.x][ng4->m_Coordinate.y] == Empty || matrix[ng4->m_Coordinate.x][ng4->m_Coordinate.y] == Teleport)){
                 neighbours.push_back(ng4);
             }
         }
         
 
         for(auto& ng : neighbours){
-            float newCostToNeighbour = currentVertex->get_g_cost() + utility::dist_euc<int>(currentVertex->coord, ng->coord);
+            float newCostToNeighbour = currentVertex->get_g_cost() + utility::dist_euc<int>(currentVertex->m_Coordinate, ng->m_Coordinate);
             if(newCostToNeighbour < ng->get_g_cost() || (openSetContains.find(ng) == openSetContains.end())){
-                grid[ng->coord.x][ng->coord.y]->set_g_cost(newCostToNeighbour);
-                grid[ng->coord.x][ng->coord.y]->set_h_cost(utility::dist_euc<int>(ng->coord, destVertex->coord));
-                grid[ng->coord.x][ng->coord.y]->calc_f_cost();
-                grid[ng->coord.x][ng->coord.y]->parent = grid[currentVertex->coord.x][currentVertex->coord.y];
+                grid[ng->m_Coordinate.x][ng->m_Coordinate.y]->set_g_cost(newCostToNeighbour);
+                grid[ng->m_Coordinate.x][ng->m_Coordinate.y]->set_h_cost(utility::dist_euc<int>(ng->m_Coordinate, destVertex->m_Coordinate));
+                grid[ng->m_Coordinate.x][ng->m_Coordinate.y]->calc_f_cost();
+                grid[ng->m_Coordinate.x][ng->m_Coordinate.y]->m_Parent = grid[currentVertex->m_Coordinate.x][currentVertex->m_Coordinate.y];
 
                 if((openSetContains.find(ng) == openSetContains.end())){
-                openSet.push(grid[ng->coord.x][ng->coord.y]); // Add to PQ
+                openSet.push(grid[ng->m_Coordinate.x][ng->m_Coordinate.y]); // Add to PQ
                 openSetContains.insert(ng); // Mark It
                 }
             }

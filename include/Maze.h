@@ -14,9 +14,9 @@ enum TileType {Empty, Wall, Obstacle, Teleport};
 
 class Maze{
 public:
-	int width;
-	int height;
-	std::vector<std::vector<TileType>> matrix;
+	int m_Width;
+	int m_Height;
+	std::vector<std::vector<TileType>> m_Matrix;
 
 public:
 	TileType pos2Tile(Vector2<float> pos);

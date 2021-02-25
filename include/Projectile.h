@@ -12,9 +12,9 @@ enum BulletType {PlayerBullet, EnemyBullet, AIBullet};
 
 class Projectile : public Sprite{
     private:
-	    int health;
+	    int m_Health;
         
-        BulletType type;
+        BulletType m_Type;
 
     public:
         Projectile();

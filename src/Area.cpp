@@ -1,14 +1,14 @@
 #include "Area.h"
 Area::Area(){
-	this->Box = (pBox)malloc(sizeof(Bbox));
+	this->m_Box = (pBox)malloc(sizeof(Bbox));
 }
 
 Area::Area(float bottom, float top, float left, float right){
-	this->Box = (pBox)malloc(sizeof(Bbox));
-	this->Box->bottom = bottom;
-	this->Box->top = top;
-	this->Box->left = left;
-	this->Box->right = right;
+	this->m_Box = (pBox)malloc(sizeof(Bbox));
+	this->m_Box->bottom = bottom;
+	this->m_Box->top = top;
+	this->m_Box->left = left;
+	this->m_Box->right = right;
 }
 
 Area::~Area(){
@@ -18,6 +18,6 @@ Area::~Area(){
 
 std::unique_ptr<Area> Area::Copy(){
 	std::unique_ptr<Area> copy = std::make_unique<Area>();
-	copy->Box = this->Box;
+	copy->m_Box = this->m_Box;
 	return copy;
 }

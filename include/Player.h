@@ -8,19 +8,25 @@
 
 #include "Sprite.h"
 
+enum PlayerControl{
+	MANUAL, 
+	AI_AGENT
+};
 
 class Player : public Sprite{
 
 private:
-	int health;
-	int score = 0;
+	int m_Health;
+	int m_Score = 0;
+	uint m_TeleportTicks = 0;
+	PlayerControl m_ControlType;
 
 public:
-	uint bullet_count=10;
+	uint m_BulletCount=10;
 
 public:
 	Player();
-	Player(uint textureBufferID, Vector2<float> position);
+	Player(uint textureBufferID, Vector2<float> position, PlayerControl controlType);
 	~Player();
 
 public:
@@ -39,6 +45,9 @@ public:
     uint TextureBufferID();
 	
 	void update(GLFWwindow* window);
+
+	// This is for ai but it will play a role in the future
+	void updateAgent(GLFWwindow* window);
 };
 
 #endif

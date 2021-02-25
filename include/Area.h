@@ -15,7 +15,7 @@ typedef struct{
 class Area{
 
 public:
-	pBox Box;
+	pBox m_Box;
 
 public:
 	Area();

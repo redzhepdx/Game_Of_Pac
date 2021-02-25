@@ -13,19 +13,19 @@ enum EnemyType {Chaser, Sniper, SuicideBomber, AI};
 
 class Enemy : public Sprite{
     private:
-	    int health;
+	    int m_Health;
         
-        EnemyType type;
+        EnemyType m_Type;
 
-        bool stuck;
-        bool on_action;
-        uint m_actionTicks;
+        bool m_Stuck;
+        bool m_OnAction;
+        uint m_ActionTicks;
         
-        Vector2<int> prevPlayerTilePos;
-        Vector2<float> prevTilePos;
-        Vector2<float> nextTilePos;
+        Vector2<int> m_PrevPlayerTilePos;
+        Vector2<float> m_PrevTilePos;
+        Vector2<float> m_NextTilePos;
         
-        std::vector<Vector2<int>> prevRoute;
+        std::vector<Vector2<int>> m_PrevRoute;
 
         void chaserUpdate(Vector2<float> playerPos, shared_point_matrix grid);
         void sniperUpdate(Vector2<float> playerPos, shared_point_matrix grid);

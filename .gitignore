@@ -49,3 +49,6 @@ out/build/
 
 
 [Bb][Uu][Ii][Ll][Dd]/
+detect_cuda_version.cc
+detect_cuda_compute_capabilities.cpp
+.vscode/c_cpp_properties.json
