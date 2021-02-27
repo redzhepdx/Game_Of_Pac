@@ -42,9 +42,9 @@ constexpr float BULLET_SPEED  = 5.0f;
 constexpr float OBJECT_OFFSET = 5.0f;
 
 // Enemy Settings
-constexpr int ENEMY_COUNT             = 20;
+constexpr int ENEMY_COUNT             = 10;
 constexpr int ENEMY_DESTROY_POINTS    = 10;
-constexpr uint MAX_ENEMY_COUNT        = 25;
+constexpr uint MAX_ENEMY_COUNT        = 10;
 constexpr float SNIPER_SIGHT_DISTANCE = 300.0f;
 
 // Texture Settings

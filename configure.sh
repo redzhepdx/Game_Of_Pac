@@ -1,4 +1,5 @@
 #! /bin/sh
 
-cmake -DCMAKE_PREFIX_PATH=`python -c 'import torch;print(torch.utils.cmake_prefix_path)'` -DCMAKE_CXX_FLAGS=-pg .
+export Torch_DIR=/absolute/path/to/site-packages/torch/share/cmake/Torch
+
 cmake -S . -B out/build

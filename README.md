@@ -24,15 +24,16 @@ From Scratch OpenGL Game and ML Agent/Enemy
 - Enemy Bullet Collection 
 - Enemy Respawn 
 - Cmake
+- Libtorch
 
 # IN-PROGRESS's
+- AI
 - Refactoring : Code Organization 
 - Check QuadTree for Collision Detection(IF IT IS NECESSARY)
 
 # TODOs:
 - Jumping Areas 
 - Screen Shaking
-- AI
 - Suicide Bomber
 
 ### Required Libs and Tools
@@ -42,23 +43,33 @@ From Scratch OpenGL Game and ML Agent/Enemy
 ```SOIL```
 ```GL GLU glut```
 ```BSD```
+```boost```
+```torch 1.7.1(I use pip versioN)```
 
 ### Compile and Run
 - Do it only once!
 
 ``` mkdir -p out/build ```
 
+``` export Torch_DIR=/absolute/path/to/site-packages/torch/share/cmake/Torch ```
+
 ``` cd out/build/ ```
 
 ``` cmake -S ../../ -B .```
 
+or 
+
+```chmod +x configure.sh build.sh run.sh```
+
+```./configure.sh```
+
 - After every update!
 
-``` make ```
+``` make ``` or ```./build.sh```
 
 - Start the game
 
-``` ./GameOfPack```
+``` ./GameOfPack``` or ```./run.sh```
 
 ### Controls
 

@@ -29,6 +29,6 @@
 #include "utils.h"
 #include "point.h"
 #include "Maze.h"
-#include "quadtree/Quadtree.h"
+#include "Quadtree/Quadtree.h"
 
 #endif

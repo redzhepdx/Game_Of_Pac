@@ -59,6 +59,11 @@
         "variant": "cpp",
         "iomanip": "cpp",
         "list": "cpp",
-        "forward_list": "cpp"
+        "forward_list": "cpp",
+        "cstring": "cpp",
+        "ctime": "cpp",
+        "cfenv": "cpp",
+        "condition_variable": "cpp",
+        "map": "cpp"
     }
 }

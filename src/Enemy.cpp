@@ -30,8 +30,8 @@ Enemy::Enemy(uint textureBufferID, Vector2<float> position, EnemyType type):
 	m_NextTilePos.y       = -1.0f;
 
 	m_Stuck               = false;
-	m_OnAction           = true;
-	m_ActionTicks       = 0;
+	m_OnAction            = true;
+	m_ActionTicks         = 0;
 }
 
 Enemy::~Enemy(){
