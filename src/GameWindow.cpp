@@ -51,7 +51,7 @@ void GameWindow::play(GLFWwindow* window){
                 --deltaTime;
 
                 if(INFO_LOG){
-                    std::cout << "FPS : " << num_frames << std::endl;
+                    std::cout << "[INFO] FPS : " << num_frames << std::endl;
                 }
 
                 num_frames = 0;
@@ -150,16 +150,16 @@ uint GameWindow::loadAndBufferImage(const char *filename, int width, int height)
 }
 
 void GameWindow::generate(){
-    std::cout << "Generate A Map" << std::endl;
+    std::cout << "[INFO] Generate A Map" << std::endl;
     generateRandomMap();
 
-    std::cout << "Generate Exit Point Map" << std::endl;
+    std::cout << "[INFO] Generate Exit Point Map" << std::endl;
     generateExitPoints();
 
-    std::cout << "Init Player" << std::endl;    
+    std::cout << "[INFO] Init Player" << std::endl;    
     initPlayer();
 
-    std::cout << "End of generation" << std::endl;
+    std::cout << "[INFO] End of generation" << std::endl;
 }
 
 void GameWindow::generateRandomMap(){
@@ -336,13 +336,13 @@ void GameWindow::initPlayer(){
     // Create Player Object
     m_Player = std::make_unique<Player>(m_TextureBufferID, Vector2<float>(randomPosition.y * SQUARE_SIZE,
                                                                       m_Width - randomPosition.x * SQUARE_SIZE),
-                                                                      MANUAL);
+                                                                      AI_AGENT);
 
     // Initialize Player
     m_Player->setArea(m_GameArena->Copy());
     m_Player->setMaze(m_Maze->Copy());
     m_Player->setVelocity(Vector2<float>(PLAYER_SPEED, PLAYER_SPEED));
-    m_Player->setHealth(100);
+    m_Player->setHealth(INITIAL_PLAYER_HEALTH);
     m_Player->setOffset(OBJECT_OFFSET);
 }
 
@@ -438,7 +438,8 @@ void GameWindow::spawnEnemies(){
             targetEnemyType = SuicideBomber;
         }
 
-        std::cout << "Spawn Enemy Type : " << targetEnemyType << std::endl;
+        std::cout << "[INFO] " << "Spawn Enemy Type : " << targetEnemyType << std::endl;
+            
 
         // Spawn
         std::unique_ptr<Enemy> enemy = std::make_unique<Enemy>(m_TextureEnemyID, 
@@ -550,11 +551,12 @@ void GameWindow::handleCollisions(){
         // Sniper bullet & player colllision
         if(checkObjectCollision(enemyBulletArea, rocketArea)){
             bulletsToDestroy.push_back(bulletIdx);
-            m_Player->setHealth(m_Player->getHealth() - 10);
+            m_Player->setHealth(m_Player->getHealth() - HEALTH_LOSS_AFTER_HIT);
             
-            if(DEBUG_LOG)
-                std::cout << "Current Player Health [BULLET] : " << m_Player->getHealth() << std::endl;  
-            
+            if(DEBUG_LOG){
+                std::cout << "[INFO] " << "Current Player Health [BULLET] : " << m_Player->getHealth() << std::endl;
+            }
+                
             continue;
         }
 
@@ -608,7 +610,9 @@ void GameWindow::handleCollisions(){
             }
                            
             if(DEBUG_LOG)
-                std::cout << "Current Player Health : " << m_Player->getHealth() << std::endl;  
+            {
+                std::cout << "[INFO] " << "Current Player Health : " << m_Player->getHealth() << std::endl;
+            }
             
             continue;
         }
@@ -624,7 +628,8 @@ void GameWindow::handleCollisions(){
                                                                     );
             if(checkObjectCollision(bulletArea, enemyArea)){
                 m_Player->addScore(ENEMY_DESTROY_POINTS);
-                std::cout << "Current Player Score : " << m_Player->getScore() << std::endl;
+
+                std::cout << "[INFO] " << "Current Player Score : " << m_Player->getScore() << std::endl;
                 
                 // Remove a bullet
                 m_BulletInstances[bulletIdx] = std::move(m_BulletInstances.back());
@@ -688,7 +693,6 @@ void GameWindow::update(GLFWwindow* window){
     }
 
     for(const auto& enemy : m_EnemyInstances){
-        // std::cout << enemy->getPosition().x << " " << enemy->getPosition().y << " - Update!" << std::endl;
         if(enemy->getType() == Sniper && enemy->onAction()){
             
             Vector2<float> bulletDirection = (m_Player->getPosition() - enemy->getPosition()).normalize();

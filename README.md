@@ -26,8 +26,10 @@ From Scratch OpenGL Game and ML Agent/Enemy
 - Cmake
 - Libtorch
 
-# IN-PROGRESS's
+# BUG-FIXING
 - AI
+
+# IN-PROGRESS's
 - Refactoring : Code Organization 
 - Check QuadTree for Collision Detection(IF IT IS NECESSARY)
 

@@ -45,7 +45,7 @@ public:
     ReplayMemory(int32_t action_size, int32_t buffer_size, int32_t batch_size):
                 m_ActionSize(action_size), m_BufferSize(buffer_size), m_BatchSize(batch_size)
     {
-        m_Buffer.resize(m_BufferSize);
+        m_Buffer.set_capacity(m_BufferSize);
     }
 
     void add(std::shared_ptr<GameState> current_state, int action, float reward, std::shared_ptr<GameState> next_state, bool done){
@@ -63,19 +63,21 @@ public:
 
         torch::Tensor stacked_current_states = m_Buffer[random_indices[0]].m_CurrentState->toTensor();
         torch::Tensor stacked_next_states    = m_Buffer[random_indices[0]].m_NextState->toTensor();
-        torch::Tensor stacked_actions        = torch::tensor((float)m_Buffer[random_indices[0]].m_Action);
-        torch::Tensor stacked_rewards        = torch::tensor((float)m_Buffer[random_indices[0]].m_Reward);
-        torch::Tensor stacked_dones          = torch::tensor((float)m_Buffer[random_indices[0]].m_Done);
+        
+        torch::Tensor stacked_actions        = torch::tensor((int64_t)m_Buffer[random_indices[0]].m_Action).unsqueeze(0);
+        torch::Tensor stacked_rewards        = torch::tensor((float)m_Buffer[random_indices[0]].m_Reward).unsqueeze(0);
+        torch::Tensor stacked_dones          = torch::tensor((uint8_t)m_Buffer[random_indices[0]].m_Done).unsqueeze(0);
 
         // Loop the current queue and stack the tensors
         for(int idx = 1; idx < m_BatchSize; ++idx){
             Experience currentExperience = m_Buffer[random_indices[idx]];
 
-            stacked_current_states       = torch::stack({stacked_current_states, currentExperience.m_CurrentState->toTensor()});
-            stacked_next_states          = torch::stack({stacked_next_states,    currentExperience.m_NextState->toTensor()});
-            stacked_actions              = torch::stack({stacked_actions, torch::tensor((float)currentExperience.m_Action)});
-            stacked_rewards              = torch::stack({stacked_rewards, torch::tensor((float)currentExperience.m_Reward)});
-            stacked_dones                = torch::stack({stacked_dones,   torch::tensor((float)currentExperience.m_Done)});
+            stacked_current_states       = torch::cat({stacked_current_states, currentExperience.m_CurrentState->toTensor()}, 0);
+            stacked_next_states          = torch::cat({stacked_next_states,    currentExperience.m_NextState->toTensor()}, 0);
+
+            stacked_actions              = torch::cat({stacked_actions, torch::tensor((int64_t)currentExperience.m_Action).unsqueeze(0)});
+            stacked_rewards              = torch::cat({stacked_rewards, torch::tensor((float)currentExperience.m_Reward).unsqueeze(0)});
+            stacked_dones                = torch::cat({stacked_dones,   torch::tensor((uint8_t)currentExperience.m_Done).unsqueeze(0)});
         }
 
         GroupTensorExperience experiencesTensor = std::make_tuple(stacked_current_states, stacked_next_states, stacked_actions, stacked_rewards, stacked_dones);

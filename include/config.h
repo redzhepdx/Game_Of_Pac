@@ -3,6 +3,8 @@
 
 #include <torch/torch.h>
 
+#define BOOST_LOG_DYN_LINK 1
+
 enum Direction { Left, Right, Up, Down};
 
 typedef struct{
@@ -53,15 +55,22 @@ constexpr int   MAX_ACTIVE_BULLET_COUNT = 20;
 // RL Agent Hyper-parameters
 constexpr int16_t AGENT_UPDATE_RATE = 2;
 constexpr int32_t SEED              = 1337;
-constexpr int32_t STATE_SIZE        = 515;
+constexpr int32_t STATE_SIZE        = 1765;
 constexpr int32_t ACTION_SIZE       = 7;
+constexpr int32_t EXPLORATION_RATE  = 100;
+constexpr int32_t BUFFER_SIZE       = 100;
+constexpr int32_t BATCH_SIZE        = 10;
 
 constexpr float   LR_RATE           = 0.001;
-constexpr float   BUFFER_SIZE       = 100;
-constexpr float   BATCH_SIZE        = 10;
-constexpr float   EPS               = 0.0f;
+constexpr float   EPS               = 0.3f;
+constexpr float   EPS_REDUCTION     = 0.3f;
 constexpr float   TAU               = 0.1f;
 constexpr float   GAMMA             = 0.1f;
+
+
+// Player Settings
+constexpr int INITIAL_PLAYER_HEALTH = 100;
+constexpr int HEALTH_LOSS_AFTER_HIT = 10;
 
 // Texture Settings
 constexpr VertexData VERTICES[4] = {
@@ -111,15 +120,15 @@ typedef struct GameState
         std::for_each(m_ActiveBulletPositions.begin(), m_ActiveBulletPositions.end(), VectorInsert);
         stateVector.insert(stateVector.end(), remainingEmptyBullet.begin(), remainingEmptyBullet.end());
 
-        // std::for_each(m_ActiveBulletDirections.begin(), m_ActiveBulletDirections.end(), VectorInsert);
         stateVector.insert(stateVector.end(), m_ActiveBulletDirections.begin(), m_ActiveBulletDirections.end());
-        stateVector.insert(stateVector.end(), remainingEmptyBullet.begin(), remainingEmptyBullet.end() - m_ActiveBulletDirections.size());
+        stateVector.insert(stateVector.end(), remainingEmptyBullet.begin(), remainingEmptyBullet.begin() + MAX_ACTIVE_BULLET_COUNT - m_ActiveBulletPositions.size());
 
         for(std::vector<TileType> tile_vec : m_Tiles){
             stateVector.insert(stateVector.end(), tile_vec.begin(), tile_vec.end());
         }
 
-        torch::Tensor stateTensor = torch::from_blob(stateVector.data(), {(long)stateVector.size()}, torch::TensorOptions().dtype(torch::kInt32)).to(torch::kInt64);
+        torch::Tensor stateTensor = torch::from_blob(stateVector.data(), {(long)stateVector.size()}, 
+                                                     torch::TensorOptions().dtype(torch::kFloat32)).to(torch::kFloat32).unsqueeze(0);
 
         return stateTensor;
     }

@@ -5,6 +5,7 @@
 #include <vector>
 #include <memory>
 #include <random>
+#include <ctime>
 
 #include <boost/range/combine.hpp>
 
@@ -22,6 +23,8 @@ private:
 
     int16_t m_UpdateRate = AGENT_UPDATE_RATE;
     int64_t m_Step = 0;
+
+    float m_Epsilon;
 
     std::unique_ptr<OUNoise> m_Noise;
     std::unique_ptr<ReplayMemory> m_Memory;
@@ -49,6 +52,7 @@ public:
 
         m_Noise       = std::make_unique<OUNoise>(m_ActionSize, SEED);
         m_Memory      = std::make_unique<ReplayMemory>(m_ActionSize, BUFFER_SIZE, BATCH_SIZE);
+        m_Epsilon     = EPS;
     }
 
     void step(std::shared_ptr<GameState> current_state, int action, float reward, std::shared_ptr<GameState> next_state, bool done){
@@ -60,6 +64,12 @@ public:
         }
 
         ++m_Step;
+        
+        // Update Epsilon
+        if(m_Step % EXPLORATION_RATE == 0){
+            m_Epsilon *= EPS_REDUCTION;
+        }
+        
     }
 
     void learn(GroupTensorExperience experiences){
@@ -73,33 +83,40 @@ public:
 
         std::tie(current_states, next_states, actions, rewards, dones) = experiences;
 
+        actions = actions.unsqueeze(1);
+
         // Get next action estimation with local q network
         auto q_targets_next_expected         = m_ActorLocal->forward(next_states).detach();
+
         auto q_targets_next_expected_actions = std::get<1>(q_targets_next_expected.max(1)).unsqueeze(1);
 
         // Calculate New Targets
-        auto q_targets_next = m_ActorTarget->forward(next_states).gather(1, q_targets_next_expected_actions);
+        auto q_targets_next = m_ActorTarget->forward(next_states).gather(1, q_targets_next_expected_actions).squeeze(1);
 
         // Non over estimate targets - Bellman Equation
         auto q_targets = rewards + (GAMMA * q_targets_next * (1 - dones));
 
         // Expected Values
-        auto q_expected = m_ActorLocal->forward(current_states).gather(1, actions);
+        auto q_expected = m_ActorLocal->forward(current_states).gather(1, actions).squeeze(1);
 
         // Mean Squarred Error
         auto loss = torch::nn::functional::mse_loss(q_expected, q_targets);
 
+        std::cout << "[INFO]Loss : " << loss.item<double>() << std::endl;
+        
         m_Optimizer->zero_grad();
         loss.backward();
         m_Optimizer->step();
 
         if(m_Step % AGENT_UPDATE_RATE == 0){
             this->softUpdate();
-        }        
+        }
     }
 
     uint32_t act(std::shared_ptr<GameState> state){
-        if((float) (std::rand() / RAND_MAX) > EPS){
+        float random_value = ((float)std::rand() / RAND_MAX);
+
+        if(random_value > m_Epsilon){
             torch::Tensor stateTensor = state->toTensor();
             
             m_ActorLocal->eval();
@@ -132,7 +149,7 @@ public:
             auto* local_parameter = local_parameters.find(parameter_name);
 
             if (local_parameter != nullptr){
-                target_parameter->copy_(TAU * local_parameter->item<float>() + (1 - TAU) + target_parameter.value());
+                target_parameter->copy_(TAU * local_parameter->data() + (1 - TAU) + target_parameter.value());
             }
         }
 

@@ -17,7 +17,7 @@ target_link_directories(${PROJECT_NAME} PUBLIC src)
 
 target_include_directories(${PROJECT_NAME} PUBLIC include include/Quadtree include/AI)
 
-target_link_libraries(${PROJECT_NAME} ${TORCH_LIBRARIES} GL GLU glut SOIL bsd glfw)
+target_link_libraries(${PROJECT_NAME} ${TORCH_LIBRARIES} GL GLU glut SOIL bsd glfw boost_log)
 
 file(COPY files DESTINATION ${CMAKE_BINARY_DIR})
 

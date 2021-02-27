@@ -75,7 +75,7 @@ std::unique_ptr<Player> Player::Copy(){
 }
 
 void Player::update(GLFWwindow* window, std::shared_ptr<GameState> currentState){
-	std::cout << "Use Count : " << currentState.use_count() << std::endl;
+	std::cout << "[CHECK] Use Count : " << currentState.use_count() << std::endl;
 	std::fill(m_Actions.begin(), m_Actions.end(), false);
 
 	if(this->m_Health <= 0){
@@ -97,7 +97,7 @@ void Player::update(GLFWwindow* window, std::shared_ptr<GameState> currentState)
 	}
 
 	executeActions();
-	
+
 	if (m_TeleportTicks > 0){
 		--m_TeleportTicks;
 	}
@@ -179,7 +179,7 @@ void Player::executeActions(){
 
 	//Reload
 	if(m_Actions[6]){
-		std::cout << "RELOAD!" << std::endl;
+		std::cout << "[INFO] " <<  "RELOAD!" << m_PrevScore << std::endl;
 		this->m_BulletCount = 10;
 	}
 }
@@ -219,8 +219,12 @@ void Player::manualControlPlayer(GLFWwindow* window){
 
 void Player::updateAgent(std::shared_ptr<GameState> currentState){
 	uint32_t action = m_Agent->act(currentState);
+
+	// if there is no score gain, punish little. If player gets a hit increase the punishment
 	float    reward = (m_Score - m_PrevScore - ENEMY_DESTROY_POINTS / 2) + (m_Health - m_PrevHealth);
 	bool     done   = (m_Health <= 0);
+
+	std::cout << "[INFO] " <<  "Step : " << m_Agent->totalStepCount() << " Action : " << action << " Reward : " << reward << " Done : " << done << std::endl;
 
 	// There is no observation
 	if(m_PrevAction != -1){
@@ -233,7 +237,7 @@ void Player::updateAgent(std::shared_ptr<GameState> currentState){
 
 
 	if(m_Agent->totalStepCount() % 1000){
-		std::cout << "Score : " << m_PrevScore << std::endl;
+		std::cout << "[INFO] " <<  "Score : " << m_PrevScore << std::endl;
 	}
 
 	// Execute a single Action

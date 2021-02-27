@@ -18,7 +18,7 @@ class Player : public Sprite{
 
 private:
 	int m_Health;
-	int m_PrevHealth;
+	int m_PrevHealth = INITIAL_PLAYER_HEALTH;
 
 	int m_Score = 0;
 	int m_PrevScore = 0;
