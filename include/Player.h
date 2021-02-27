@@ -7,6 +7,7 @@
 #include <cmath>
 
 #include "Sprite.h"
+#include "AI/Agent.h"
 
 enum PlayerControl{
 	MANUAL, 
@@ -17,9 +18,21 @@ class Player : public Sprite{
 
 private:
 	int m_Health;
+	int m_PrevHealth;
+
 	int m_Score = 0;
+	int m_PrevScore = 0;
+
+	std::vector<bool> m_Actions;
+
 	uint m_TeleportTicks = 0;
 	PlayerControl m_ControlType;
+	std::unique_ptr<Agent> m_Agent;
+
+	std::shared_ptr<GameState> m_PrevGameState{nullptr};
+	uint32_t m_PrevAction = -1;
+	float    m_PrevReward = -1;
+	
 
 public:
 	uint m_BulletCount=10;
@@ -37,17 +50,25 @@ public:
 
 
 	int getHealth();
-	Vector2<float> getPosition();
 	int getScore();
+
+	uint getRemainingBulletCount();
+	uint getTimeToTeleport();
+
+	Vector2<float> getPosition();
 
 	std::unique_ptr<Player> Copy();
 
     uint TextureBufferID();
 	
-	void update(GLFWwindow* window);
+	void update(GLFWwindow* window, std::shared_ptr<GameState> currentState);
 
 	// This is for ai but it will play a role in the future
-	void updateAgent(GLFWwindow* window);
+	void updateAgent(std::shared_ptr<GameState> currentState);
+
+	void manualControlPlayer(GLFWwindow* window);
+
+	void executeActions();
 };
 
 #endif

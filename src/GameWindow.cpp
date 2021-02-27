@@ -708,7 +708,7 @@ void GameWindow::update(GLFWwindow* window){
         tile->update(window);
     }
 
-    m_Player->update(window);
+    m_Player->update(window, this->getCurrentGameState());
     
     // Random Restart Check!
     if(glfwGetKey(window, GLFW_KEY_U) == GLFW_TRUE){
@@ -775,4 +775,33 @@ void GameWindow::test_path_finding(Vector2<float> target_pos){
     }
 
     std::cout << std::endl;
+}
+
+std::shared_ptr<GameState> GameWindow::getCurrentGameState(){
+
+    std::vector<Vector2<float>> enemy_positions;
+    std::vector<Vector2<float>> bullet_positions;
+    std::vector<float> bullet_directions;
+
+
+    std::for_each(m_EnemyInstances.begin(), m_EnemyInstances.end(), [&](auto& enemy){
+                                                                        enemy_positions.push_back(enemy->getPosition());
+                                                                    });
+
+    std::for_each(m_EnemyBulletInstances.begin(), m_EnemyBulletInstances.end(), [&](auto& bullet){
+                                                                        bullet_positions.push_back(bullet->getPosition());
+                                                                        bullet_directions.push_back(bullet->getRotation());
+                                                                    });
+
+
+
+    std::shared_ptr<GameState> current_state = utility::createGameState(m_Player->getPosition(), 
+                                                                        m_Player->getRemainingBulletCount(), 
+                                                                        m_Player->getTimeToTeleport(), 
+                                                                        m_Maze->m_Matrix, 
+                                                                        enemy_positions,
+                                                                        bullet_positions,
+                                                                        bullet_directions);
+
+    return current_state;
 }

@@ -10,8 +10,6 @@
 #include "Vector2.h"
 #include "config.h"
 
-enum TileType {Empty, Wall, Obstacle, Teleport};
-
 class Maze{
 public:
 	int m_Width;

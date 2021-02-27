@@ -122,6 +122,10 @@ private:
     // Quick Functionality Test Functions
     void test_path_finding(Vector2<float> target_pos);
 
+private:
+    // Environment Functions
+    std::shared_ptr<GameState> getCurrentGameState();
+
 public:
     GameWindow(bool status, int width, int height);
     ~GameWindow();
