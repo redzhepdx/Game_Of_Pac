@@ -383,19 +383,16 @@ void GameWindow::fireEnemyBullet(Vector2<float> enemyPosition, Vector2<float> di
 }
 
 void GameWindow::handleSpawns(GLFWwindow* window){
-    /*Basic Spawn Trick*/
-    // static int spawnTicks = 0;
-    // static int fireTicks  = 0;
-    // static int enemyTicks = 0;
-
-    if(glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS &&
-                  m_Player->m_BulletCount > 0 &&
-                  m_FireTicks >= PLAYER_FIRE_TICKS){
+    if(m_Player->getFireStatus() &&
+       m_Player->m_BulletCount > 0 &&
+       m_FireTicks >= PLAYER_FIRE_TICKS){
 
         firePlayerBullet();
         m_FireTicks = 0;
         --m_Player->m_BulletCount;
     }
+
+    m_Player->setFireStatus(false); // Reset player fire order
 
     if(m_SpawnTicks >= ENEMY_SPAWN_TICKS){
         spawnEnemies();

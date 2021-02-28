@@ -10,7 +10,6 @@
 
 #include "Sprite.h"
 #include "AI/Agent.h"
-#include "External/Logging.h"
 
 enum PlayerControl{
 	MANUAL, 
@@ -25,6 +24,8 @@ private:
 
 	int m_Score = 0;
 	int m_PrevScore = 0;
+
+	bool m_FireOrder = false;
 
 	std::vector<bool> m_Actions;
 
@@ -57,6 +58,9 @@ public:
 
 	uint getRemainingBulletCount();
 	uint getTimeToTeleport();
+
+	bool getFireStatus();
+	void setFireStatus(bool status);
 
 	Vector2<float> getPosition();
 

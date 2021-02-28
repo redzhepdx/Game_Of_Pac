@@ -15,8 +15,6 @@
 #include "Utility.h"
 #include "Memory.h"
 
-#include "External/Logging.h"
-
 class Agent{
 
 private:
@@ -55,23 +53,26 @@ public:
         m_Noise       = std::make_unique<OUNoise>(m_ActionSize, SEED);
         m_Memory      = std::make_unique<ReplayMemory>(m_ActionSize, BUFFER_SIZE, BATCH_SIZE);
         m_Epsilon     = EPS;
+
+        this->initWeights(m_ActorLocal);
+        this->initWeights(m_ActorTarget);
     }
 
     void step(std::shared_ptr<GameState> current_state, int action, float reward, std::shared_ptr<GameState> next_state, bool done){
         m_Memory->add(current_state, action, reward, next_state, done);
 
-        if(m_Memory->capacity() > BATCH_SIZE){
+
+        if(m_Memory->capacity() > BATCH_SIZE && m_Step % TRAIN_EVERY == 0){
             GroupTensorExperience experiences = m_Memory->sample();
             this->learn(experiences);
         }
-
-        ++m_Step;
         
         // Update Epsilon
-        if(m_Step % EXPLORATION_RATE == 0){
+        if(m_Step % EXPLORATION_UPDATE == 0){
             m_Epsilon *= EPS_REDUCTION;
         }
-        
+
+        ++m_Step;
     }
 
     void learn(GroupTensorExperience experiences){
@@ -100,16 +101,18 @@ public:
 
         // Expected Values
         auto q_expected = m_ActorLocal->forward(current_states).gather(1, actions).squeeze(1);
-
+        // std::cout << "\033[33m[DEBUG] -> Q_EXPECTED AFTER GATHER : \n" << q_expected << std::endl;
+        // std::cout << "\033[33m[DEBUG] -> Q_TARGETS : \n" << q_targets << std::endl;
+        
         // Mean Squarred Error
         auto loss = torch::nn::functional::mse_loss(q_expected, q_targets);
-
-        // std::cout << "[INFO]Loss : " << loss.item<double>() << std::endl;
-        std::cout << "[INFO] Loss : " << loss.item<double>() << std::endl;
         
         m_Optimizer->zero_grad();
         loss.backward();
         m_Optimizer->step();
+
+        // std::cout << "[INFO]Loss : " << loss.item<double>() << std::endl;
+        std::cout << "\033[31m[INFO] Loss : " << loss.item<double>() << std::endl;
 
         if(m_Step % AGENT_UPDATE_RATE == 0){
             this->softUpdate();
@@ -167,6 +170,26 @@ public:
         for (const auto& p : network->parameters()) {
             std::cout << p.sizes() << std::endl;
         }
+    }
+
+    void initWeights(DeepQNetwork& network)
+    {
+        torch::autograd::GradMode::set_enabled(false);
+        
+        for(auto& parameter : network->named_parameters(true)){
+            auto param_name = parameter.key();
+            auto param      = parameter.value();
+            
+            if (param_name.compare(2, 6, "weight") == 0){
+                torch::nn::init::xavier_uniform_(param);
+            }
+            else if (param_name.compare(2, 4, "bias") == 0)
+            {
+                torch::nn::init::constant_(param, 0.01);
+            }
+        }
+
+        torch::autograd::GradMode::set_enabled(true);
     }
 
     void printNetworks() {

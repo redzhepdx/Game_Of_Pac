@@ -9,7 +9,7 @@ struct DeepQNetworkImpl : torch::nn::Module{
 private:
     int32_t m_StateSize;
     int32_t m_ActionSize;
-    int32_t m_HiddenSize = 128;
+    int32_t m_HiddenSize = 1024;
 
 public:
     explicit DeepQNetworkImpl(int32_t state_size, int32_t action_size): m_StateSize(state_size), m_ActionSize(action_size){

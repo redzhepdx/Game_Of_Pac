@@ -52,6 +52,14 @@ int Player::getScore(){
 	return this->m_Score;
 }
 
+bool Player::getFireStatus(){
+	return m_FireOrder;
+}
+
+void Player::setFireStatus(bool status){
+	m_FireOrder = status;
+}
+
 void Player::setTextureBufferID(uint textureBufferID)
 {
    	Sprite::setTextureBufferID(textureBufferID);
@@ -75,7 +83,7 @@ std::unique_ptr<Player> Player::Copy(){
 }
 
 void Player::update(GLFWwindow* window, std::shared_ptr<GameState> currentState){
-	std::cout << "\033[32m[CHECK] Use Count : " << currentState.use_count() << std::endl;;
+	// std::cout << "\033[32m[CHECK] Use Count : " << currentState.use_count() << std::endl;;
 	std::fill(m_Actions.begin(), m_Actions.end(), false);
 
 	if(this->m_Health <= 0){
@@ -182,6 +190,11 @@ void Player::executeActions(){
 		std::cout << "\033[32;34m[INFO] " <<  "RELOAD!" << m_PrevScore << std::endl;
 		this->m_BulletCount = 10;
 	}
+
+	// Shoot
+	if(m_Actions[7]){
+		setFireStatus(true);
+	}
 }
 
 void Player::manualControlPlayer(GLFWwindow* window){
@@ -214,7 +227,9 @@ void Player::manualControlPlayer(GLFWwindow* window){
 		m_Actions[6] = true;
 	}
 
-
+	if(glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS){
+		m_Actions[7] = true;
+	}
 }
 
 void Player::updateAgent(std::shared_ptr<GameState> currentState){
@@ -224,7 +239,7 @@ void Player::updateAgent(std::shared_ptr<GameState> currentState){
 	float    reward = (m_Score - m_PrevScore - ENEMY_DESTROY_POINTS / 2) + (m_Health - m_PrevHealth);
 	bool     done   = (m_Health <= 0);
 
-	std::cout << "\033[32;34m[INFO] " <<  "Step : " << m_Agent->totalStepCount() << " Action : " << action << " Reward : " << reward << " Done : " << done << std::endl;
+	// std::cout << "\033[32;34m[INFO] " <<  "Step : " << m_Agent->totalStepCount() << " Action : " << action << " Reward : " << reward << " Done : " << done << std::endl;
 
 	// There is no observation
 	if(m_PrevAction != -1){
@@ -238,7 +253,7 @@ void Player::updateAgent(std::shared_ptr<GameState> currentState){
 	m_PrevScore     = m_Score;
 
 
-	if(m_Agent->totalStepCount() % 1000){
+	if(m_Agent->totalStepCount() % 1000 == 0){
 		std::cout << "\033[32;34m[INFO] " <<  "Score : " << m_PrevScore << std::endl;
 	}
 
