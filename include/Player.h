@@ -50,6 +50,8 @@ public:
 	void setHealth(int new_health);
 	void setArea(std::unique_ptr<Area> area);
 	void setTextureBufferID(uint textureBufferID);
+	void setFireStatus(bool status);
+	void setScore(int score);
 	void addScore(int points);
 
 
@@ -60,8 +62,9 @@ public:
 	uint getTimeToTeleport();
 
 	bool getFireStatus();
-	void setFireStatus(bool status);
 
+	void reset();
+	
 	Vector2<float> getPosition();
 
 	std::unique_ptr<Player> Copy();

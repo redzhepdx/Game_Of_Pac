@@ -65,7 +65,7 @@ constexpr int32_t BATCH_SIZE         = 512;
 constexpr float   LR_RATE            = 0.001;
 constexpr float   EPS                = 0.3f;
 constexpr float   EPS_REDUCTION      = 0.3f;
-constexpr float   TAU                = 0.5f;
+constexpr float   TAU                = 0.2f;
 constexpr float   GAMMA              = 0.1f;
 
 
@@ -100,15 +100,15 @@ typedef struct GameState
     torch::Tensor toTensor(){
         std::vector<float> stateVector;
 
-        stateVector.push_back(m_PlayerPos.x);
-        stateVector.push_back(m_PlayerPos.y);
+        stateVector.push_back(m_PlayerPos.x / HEIGHT);
+        stateVector.push_back(m_PlayerPos.y / WIDTH);
 
         stateVector.push_back((float)m_AvailableProjectiles);
         stateVector.push_back(m_TimeToTeleport);
 
         auto VectorInsert = [&](Vector2<float> pos){ 
-            stateVector.push_back(pos.x); 
-            stateVector.push_back(pos.y);
+            stateVector.push_back(pos.x / HEIGHT); 
+            stateVector.push_back(pos.y / WIDTH);
         };
         
         // Empty Bullets

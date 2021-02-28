@@ -87,23 +87,22 @@ public:
         std::tie(current_states, next_states, actions, rewards, dones) = experiences;
 
         actions = actions.unsqueeze(1);
+        rewards = rewards.unsqueeze(1);
+        dones   = dones.unsqueeze(1);
 
         // Get next action estimation with local q network
         auto q_targets_next_expected         = m_ActorLocal->forward(next_states).detach();
-
         auto q_targets_next_expected_actions = std::get<1>(q_targets_next_expected.max(1)).unsqueeze(1);
 
         // Calculate New Targets
-        auto q_targets_next = m_ActorTarget->forward(next_states).gather(1, q_targets_next_expected_actions).squeeze(1);
+        auto q_targets_next = m_ActorTarget->forward(next_states).gather(1, q_targets_next_expected_actions);
 
         // Non over estimate targets - Bellman Equation
         auto q_targets = rewards + (GAMMA * q_targets_next * (1 - dones));
 
         // Expected Values
-        auto q_expected = m_ActorLocal->forward(current_states).gather(1, actions).squeeze(1);
-        // std::cout << "\033[33m[DEBUG] -> Q_EXPECTED AFTER GATHER : \n" << q_expected << std::endl;
-        // std::cout << "\033[33m[DEBUG] -> Q_TARGETS : \n" << q_targets << std::endl;
-        
+        auto q_expected = m_ActorLocal->forward(current_states).gather(1, actions);
+                
         // Mean Squarred Error
         auto loss = torch::nn::functional::mse_loss(q_expected, q_targets);
         
@@ -131,6 +130,7 @@ public:
             torch::autograd::GradMode::set_enabled(false);
 
             auto action_values = m_ActorLocal->forward(stateTensor);
+            // std::cout << "\033[38m[INFO] Prediction : " << action_values << std::endl;
             
             // Unlock the Gradient Calculations
             torch::autograd::GradMode::set_enabled(true);
@@ -148,14 +148,19 @@ public:
         // Update Target Network's parameters slowly
         torch::autograd::GradMode::set_enabled(false);
         
-        auto local_parameters = m_ActorTarget->named_parameters(true);
-        
-        for(auto& target_parameter : m_ActorLocal->named_parameters(true)){
-            auto parameter_name   = target_parameter.key();
-            auto* local_parameter = local_parameters.find(parameter_name);
-
-            if (local_parameter != nullptr){
-                target_parameter->copy_(TAU * local_parameter->data() + (1 - TAU) + target_parameter.value());
+        auto target_params = m_ActorTarget->named_parameters(); // implement this
+        auto params = m_ActorLocal->named_parameters(true /*recurse*/);
+        auto buffers = m_ActorLocal->named_buffers(true /*recurse*/);
+        for (auto& val : params) {
+            auto name = val.key();
+            auto* t = target_params.find(name);
+            if (t != nullptr) {
+                t->copy_(val.value() * TAU + (1 - TAU) * t->data());
+            } else {
+                t = buffers.find(name);
+                if (t != nullptr) {
+                    t->copy_(val.value() * TAU + (1 - TAU) * t->data());
+                }
             }
         }
 

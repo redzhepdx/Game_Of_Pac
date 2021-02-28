@@ -332,18 +332,23 @@ void GameWindow::generateExitPoints(){
 void GameWindow::initPlayer(){
     //Get Random Point
     Vector2<int> randomPosition = m_EmptyTiles[arc4random() % m_EmptyTiles.size()];
+    if(m_Player.get() == nullptr){
+        // Create Player Object
+        m_Player = std::make_unique<Player>(m_TextureBufferID, Vector2<float>(randomPosition.y * SQUARE_SIZE,
+                                                                        m_Width - randomPosition.x * SQUARE_SIZE),
+                                                                        AI_AGENT);
 
-    // Create Player Object
-    m_Player = std::make_unique<Player>(m_TextureBufferID, Vector2<float>(randomPosition.y * SQUARE_SIZE,
-                                                                      m_Width - randomPosition.x * SQUARE_SIZE),
-                                                                      AI_AGENT);
-
+        m_Player->setVelocity(Vector2<float>(PLAYER_SPEED, PLAYER_SPEED));
+        m_Player->setOffset(OBJECT_OFFSET);
+    }
+    else{
+        m_Player->reset();
+    }
     // Initialize Player
+    m_Player->setPosition(Vector2<float>(randomPosition.y * SQUARE_SIZE,
+                                            m_Width - randomPosition.x * SQUARE_SIZE));
     m_Player->setArea(m_GameArena->Copy());
-    m_Player->setMaze(m_Maze->Copy());
-    m_Player->setVelocity(Vector2<float>(PLAYER_SPEED, PLAYER_SPEED));
-    m_Player->setHealth(INITIAL_PLAYER_HEALTH);
-    m_Player->setOffset(OBJECT_OFFSET);
+    m_Player->setMaze(m_Maze->Copy());   
 }
 
 bool GameWindow::isPositionValid(Vector2<int> &position, int min_row, int max_row, int min_col, int max_col){

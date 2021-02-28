@@ -48,6 +48,10 @@ void Player::addScore(int points){
 	this->m_Score += points;
 }
 
+void Player::setScore(int points){
+	this->m_Score = points;
+}
+
 int Player::getScore(){
 	return this->m_Score;
 }
@@ -63,6 +67,17 @@ void Player::setFireStatus(bool status){
 void Player::setTextureBufferID(uint textureBufferID)
 {
    	Sprite::setTextureBufferID(textureBufferID);
+}
+
+void Player::reset(){
+	m_Health        = INITIAL_PLAYER_HEALTH;
+	m_PrevHealth    = INITIAL_PLAYER_HEALTH;
+	m_Score         = 0;
+	m_PrevScore     = 0;
+	m_PrevGameState = nullptr;
+	m_PrevAction    = -1;
+	m_PrevReward    = -1;
+	m_BulletCount   = 10;
 }
 
 uint Player::TextureBufferID(){
@@ -187,12 +202,13 @@ void Player::executeActions(){
 
 	//Reload
 	if(m_Actions[6]){
-		std::cout << "\033[32;34m[INFO] " <<  "RELOAD!" << m_PrevScore << std::endl;
+		// std::cout << "\033[32;34m[PLAYER ACTION] " <<  "- RELOAD! -" << std::endl;
 		this->m_BulletCount = 10;
 	}
 
 	// Shoot
 	if(m_Actions[7]){
+		// std::cout << "\033[32;34m[PLAYER ACTION] " <<  "- FIRE! -" << std::endl;
 		setFireStatus(true);
 	}
 }
@@ -253,8 +269,8 @@ void Player::updateAgent(std::shared_ptr<GameState> currentState){
 	m_PrevScore     = m_Score;
 
 
-	if(m_Agent->totalStepCount() % 1000 == 0){
-		std::cout << "\033[32;34m[INFO] " <<  "Score : " << m_PrevScore << std::endl;
+	if(m_Agent->totalStepCount() % 100 == 0){
+		std::cout << "\033[32;36m[INFO] " <<  "Score : " << m_PrevScore << std::endl;
 	}
 
 	// Execute a single Action

@@ -43,7 +43,7 @@ uint Sprite::getTextureBufferID(){
 }
 
 void Sprite::setPosition(Vector2<float> newPosition){
-    this->m_Position = m_Position;
+    this->m_Position = newPosition;
 }
 
 Vector2<float> Sprite::getPosition(){
