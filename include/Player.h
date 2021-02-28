@@ -1,6 +1,8 @@
 #ifndef __PLAYER_SPRITE__
 #define __PLAYER_SPRITE__
 
+#define _LVL
+
 #include <GLFW/glfw3.h>
 
 #include <iostream>
@@ -8,6 +10,7 @@
 
 #include "Sprite.h"
 #include "AI/Agent.h"
+#include "External/Logging.h"
 
 enum PlayerControl{
 	MANUAL, 

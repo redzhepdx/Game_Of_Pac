@@ -51,7 +51,7 @@ void GameWindow::play(GLFWwindow* window){
                 --deltaTime;
 
                 if(INFO_LOG){
-                    std::cout << "[INFO] FPS : " << num_frames << std::endl;
+                    std::cout << "\033[33m[INFO] FPS : " << num_frames << std::endl;
                 }
 
                 num_frames = 0;
@@ -150,16 +150,16 @@ uint GameWindow::loadAndBufferImage(const char *filename, int width, int height)
 }
 
 void GameWindow::generate(){
-    std::cout << "[INFO] Generate A Map" << std::endl;
+    std::cout << "\033[33m[INFO] Generate A Map" << std::endl;
     generateRandomMap();
 
-    std::cout << "[INFO] Generate Exit Point Map" << std::endl;
+    std::cout << "\033[33m[INFO] Generate Exit Point Map" << std::endl;
     generateExitPoints();
 
-    std::cout << "[INFO] Init Player" << std::endl;    
+    std::cout << "\033[33m[INFO] Init Player" << std::endl;    
     initPlayer();
 
-    std::cout << "[INFO] End of generation" << std::endl;
+    std::cout << "\033[33m[INFO] End of generation" << std::endl;
 }
 
 void GameWindow::generateRandomMap(){
@@ -438,7 +438,7 @@ void GameWindow::spawnEnemies(){
             targetEnemyType = SuicideBomber;
         }
 
-        std::cout << "[INFO] " << "Spawn Enemy Type : " << targetEnemyType << std::endl;
+        std::cout << "\033[31m[INFO] " << "Spawn Enemy Type : " << targetEnemyType << std::endl;
             
 
         // Spawn
@@ -554,7 +554,7 @@ void GameWindow::handleCollisions(){
             m_Player->setHealth(m_Player->getHealth() - HEALTH_LOSS_AFTER_HIT);
             
             if(DEBUG_LOG){
-                std::cout << "[INFO] " << "Current Player Health [BULLET] : " << m_Player->getHealth() << std::endl;
+                std::cout << "\033[31m[INFO] " << "Current Player Health [BULLET] : " << m_Player->getHealth() << std::endl;
             }
                 
             continue;
@@ -611,7 +611,7 @@ void GameWindow::handleCollisions(){
                            
             if(DEBUG_LOG)
             {
-                std::cout << "[INFO] " << "Current Player Health : " << m_Player->getHealth() << std::endl;
+                std::cout << "\033[33m[INFO] " << "Current Player Health : " << m_Player->getHealth() << std::endl;
             }
             
             continue;
@@ -629,7 +629,7 @@ void GameWindow::handleCollisions(){
             if(checkObjectCollision(bulletArea, enemyArea)){
                 m_Player->addScore(ENEMY_DESTROY_POINTS);
 
-                std::cout << "[INFO] " << "Current Player Score : " << m_Player->getScore() << std::endl;
+                std::cout << "\033[33m[INFO] " << "Current Player Score : " << m_Player->getScore() << std::endl;
                 
                 // Remove a bullet
                 m_BulletInstances[bulletIdx] = std::move(m_BulletInstances.back());

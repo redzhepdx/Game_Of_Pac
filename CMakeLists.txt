@@ -15,7 +15,7 @@ add_executable(${PROJECT_NAME} main.cpp ${SOURCES})
 
 target_link_directories(${PROJECT_NAME} PUBLIC src)
 
-target_include_directories(${PROJECT_NAME} PUBLIC include include/Quadtree include/AI)
+target_include_directories(${PROJECT_NAME} PUBLIC include include/Quadtree include/AI include/External)
 
 target_link_libraries(${PROJECT_NAME} ${TORCH_LIBRARIES} GL GLU glut SOIL bsd glfw boost_log)
 

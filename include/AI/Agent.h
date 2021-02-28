@@ -15,6 +15,8 @@
 #include "Utility.h"
 #include "Memory.h"
 
+#include "External/Logging.h"
+
 class Agent{
 
 private:
@@ -102,7 +104,8 @@ public:
         // Mean Squarred Error
         auto loss = torch::nn::functional::mse_loss(q_expected, q_targets);
 
-        std::cout << "[INFO]Loss : " << loss.item<double>() << std::endl;
+        // std::cout << "[INFO]Loss : " << loss.item<double>() << std::endl;
+        std::cout << "[INFO] Loss : " << loss.item<double>() << std::endl;
         
         m_Optimizer->zero_grad();
         loss.backward();

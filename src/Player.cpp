@@ -75,7 +75,7 @@ std::unique_ptr<Player> Player::Copy(){
 }
 
 void Player::update(GLFWwindow* window, std::shared_ptr<GameState> currentState){
-	std::cout << "[CHECK] Use Count : " << currentState.use_count() << std::endl;
+	std::cout << "\033[32m[CHECK] Use Count : " << currentState.use_count() << std::endl;;
 	std::fill(m_Actions.begin(), m_Actions.end(), false);
 
 	if(this->m_Health <= 0){
@@ -179,7 +179,7 @@ void Player::executeActions(){
 
 	//Reload
 	if(m_Actions[6]){
-		std::cout << "[INFO] " <<  "RELOAD!" << m_PrevScore << std::endl;
+		std::cout << "\033[32;34m[INFO] " <<  "RELOAD!" << m_PrevScore << std::endl;
 		this->m_BulletCount = 10;
 	}
 }
@@ -224,7 +224,7 @@ void Player::updateAgent(std::shared_ptr<GameState> currentState){
 	float    reward = (m_Score - m_PrevScore - ENEMY_DESTROY_POINTS / 2) + (m_Health - m_PrevHealth);
 	bool     done   = (m_Health <= 0);
 
-	std::cout << "[INFO] " <<  "Step : " << m_Agent->totalStepCount() << " Action : " << action << " Reward : " << reward << " Done : " << done << std::endl;
+	std::cout << "\033[32;34m[INFO] " <<  "Step : " << m_Agent->totalStepCount() << " Action : " << action << " Reward : " << reward << " Done : " << done << std::endl;
 
 	// There is no observation
 	if(m_PrevAction != -1){
@@ -234,10 +234,12 @@ void Player::updateAgent(std::shared_ptr<GameState> currentState){
 	m_PrevGameState = currentState;
 	m_PrevAction    = action;
 	m_PrevReward    = reward;
+	m_PrevHealth    = m_Health;
+	m_PrevScore     = m_Score;
 
 
 	if(m_Agent->totalStepCount() % 1000){
-		std::cout << "[INFO] " <<  "Score : " << m_PrevScore << std::endl;
+		std::cout << "\033[32;34m[INFO] " <<  "Score : " << m_PrevScore << std::endl;
 	}
 
 	// Execute a single Action
