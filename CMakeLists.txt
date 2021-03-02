@@ -17,13 +17,13 @@ target_link_directories(${PROJECT_NAME} PUBLIC src)
 
 target_include_directories(${PROJECT_NAME} PUBLIC include include/Quadtree include/AI include/External)
 
-target_link_libraries(${PROJECT_NAME} ${TORCH_LIBRARIES} GL GLU glut SOIL bsd glfw boost_log)
+target_link_libraries(${PROJECT_NAME} ${TORCH_LIBRARIES} GL GLU glut SOIL bsd glfw boost_log boost_system)
 
 file(COPY files DESTINATION ${CMAKE_BINARY_DIR})
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS} -pg")
-set(CMAKE_CXX_FLAGS_DEBUG "-g")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 --no-pie")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
+set(CMAKE_CXX_FLAGS_DEBUG "-pg")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3" "-pg")
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
     CXX_STANDARD 17

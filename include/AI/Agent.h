@@ -7,6 +7,7 @@
 #include <random>
 #include <ctime>
 
+#include <boost/filesystem.hpp>
 #include <boost/range/combine.hpp>
 
 #include "config.h"
@@ -34,6 +35,8 @@ private:
 
     std::unique_ptr<torch::optim::Adam> m_Optimizer;
 
+    torch::Device m_Device;
+
 private:
     void updateLearningRate(float new_lr_rate){
         static_cast<torch::optim::AdamOptions&>(m_Optimizer->param_groups()[0].options()).lr(new_lr_rate);
@@ -44,18 +47,29 @@ private:
     }
 
 public:
-    Agent(int32_t state_size, int32_t action_size) : m_StateSize(state_size), m_ActionSize(action_size){
+    Agent(int32_t state_size, int32_t action_size, torch::Device device) : m_StateSize(state_size), m_ActionSize(action_size), m_Device(device){
+
         m_ActorLocal  = DeepQNetwork(m_StateSize, m_ActionSize);
         m_ActorTarget = DeepQNetwork(m_StateSize, m_ActionSize);
 
         m_Optimizer   = std::move(std::make_unique<torch::optim::Adam>(m_ActorLocal->parameters(), LR_RATE));
 
         m_Noise       = std::make_unique<OUNoise>(m_ActionSize, SEED);
-        m_Memory      = std::make_unique<ReplayMemory>(m_ActionSize, BUFFER_SIZE, BATCH_SIZE);
-        m_Epsilon     = EPS;
+        m_Memory      = std::make_unique<ReplayMemory>(m_ActionSize, BUFFER_SIZE, BATCH_SIZE, m_Device);
+        m_Epsilon     = EPS;        
+
+        m_ActorLocal->train();
+        m_ActorTarget->train();
+        
+        m_ActorLocal->to(m_Device);
+        m_ActorTarget->to(m_Device);
 
         this->initWeights(m_ActorLocal);
         this->initWeights(m_ActorTarget);
+
+        this->printNetworks();
+
+        this->loadNetworks();
     }
 
     void step(std::shared_ptr<GameState> current_state, int action, float reward, std::shared_ptr<GameState> next_state, bool done){
@@ -65,6 +79,10 @@ public:
         if(m_Memory->capacity() > BATCH_SIZE && m_Step % TRAIN_EVERY == 0){
             GroupTensorExperience experiences = m_Memory->sample();
             this->learn(experiences);
+        }
+
+        if(m_Step % SAVE_EVERY == 0 && m_Step > 0){
+            this->saveNetworks();
         }
         
         // Update Epsilon
@@ -114,6 +132,7 @@ public:
         std::cout << "\033[31m[INFO] Loss : " << loss.item<double>() << std::endl;
 
         if(m_Step % AGENT_UPDATE_RATE == 0){
+            std::cout << "\033[33;35m[CHECK] Replay Memory Capacity : " << m_Memory->capacity() << std::endl;
             this->softUpdate();
         }
     }
@@ -123,7 +142,7 @@ public:
 
         if(random_value > m_Epsilon){
             torch::Tensor stateTensor = state->toTensor();
-            
+            stateTensor = stateTensor.to(m_Device);
             m_ActorLocal->eval();
             
             // Lock Gradient Calculations
@@ -147,7 +166,7 @@ public:
     void softUpdate(){
         // Update Target Network's parameters slowly
         torch::autograd::GradMode::set_enabled(false);
-        
+
         auto target_params = m_ActorTarget->named_parameters(); // implement this
         auto params = m_ActorLocal->named_parameters(true /*recurse*/);
         auto buffers = m_ActorLocal->named_buffers(true /*recurse*/);
@@ -202,6 +221,37 @@ public:
         printNetwork(m_ActorLocal);
         std::cout << "-----------------------Actor Target------------------" << std::endl;
         printNetwork(m_ActorTarget);
+    }
+
+    void saveNetwork(DeepQNetwork& network, std::string model_path) {
+        torch::serialize::OutputArchive output_archive;
+        network->save(output_archive);
+        output_archive.save_to(model_path);
+    }
+
+    void saveNetworks(){
+        std::cout << "\033[35m[INFO] Saving Networks" << std::endl;
+
+        saveNetwork(m_ActorLocal, "ActorLocal.pt");
+        saveNetwork(m_ActorTarget, "ActorTarget.pt");
+    }
+
+    void loadNetwork(DeepQNetwork& network, std::string model_path){
+        if(boost::filesystem::exists(model_path)){
+            torch::serialize::InputArchive archive;
+            archive.load_from(model_path);
+            network->load(archive);
+        }
+        else{
+            std::cout << "\033[35m[INFO] There is no " << model_path << " named file!" << std::endl;
+        }
+    }
+
+    void loadNetworks(){
+        std::cout << "\033[35m[INFO] Loading Networks" << std::endl;
+
+        saveNetwork(m_ActorLocal, "ActorLocal.pt");
+        saveNetwork(m_ActorTarget, "ActorTarget.pt");
     }
 };
 

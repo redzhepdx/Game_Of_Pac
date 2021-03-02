@@ -13,7 +13,11 @@ Player::Player(uint textureBufferID, Vector2<float> position, PlayerControl cont
 	m_Actions.resize(ACTION_SIZE);
 
 	if (this->m_ControlType == AI_AGENT){
-		m_Agent = std::make_unique<Agent>(STATE_SIZE, ACTION_SIZE);
+		if(torch::cuda::is_available()){
+			m_Agent = std::make_unique<Agent>(STATE_SIZE, ACTION_SIZE, torch::kCUDA);
+		}else{
+			m_Agent = std::make_unique<Agent>(STATE_SIZE, ACTION_SIZE, torch::kCPU);
+		}
 	}
 }
 
@@ -70,6 +74,7 @@ void Player::setTextureBufferID(uint textureBufferID)
 }
 
 void Player::reset(){
+	std::cout << "\033[36m[INFO] Player Reset" << std::endl;
 	m_Health        = INITIAL_PLAYER_HEALTH;
 	m_PrevHealth    = INITIAL_PLAYER_HEALTH;
 	m_Score         = 0;
@@ -255,7 +260,7 @@ void Player::updateAgent(std::shared_ptr<GameState> currentState){
 	float    reward = (m_Score - m_PrevScore - ENEMY_DESTROY_POINTS / 2) + (m_Health - m_PrevHealth);
 	bool     done   = (m_Health <= 0);
 
-	// std::cout << "\033[32;34m[INFO] " <<  "Step : " << m_Agent->totalStepCount() << " Action : " << action << " Reward : " << reward << " Done : " << done << std::endl;
+	// std::cout << "\033[31;33m[INFO] " <<  "Step : " << m_Agent->totalStepCount() << " Action : " << action << " Reward : " << reward << " Done : " << done << std::endl;
 
 	// There is no observation
 	if(m_PrevAction != -1){
@@ -270,7 +275,7 @@ void Player::updateAgent(std::shared_ptr<GameState> currentState){
 
 
 	if(m_Agent->totalStepCount() % 100 == 0){
-		std::cout << "\033[32;36m[INFO] " <<  "Score : " << m_PrevScore << std::endl;
+		std::cout << "\033[32;36m[INFO] " <<  "Current Score : " << m_PrevScore << std::endl;
 	}
 
 	// Execute a single Action

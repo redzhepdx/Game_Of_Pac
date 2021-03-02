@@ -64,6 +64,8 @@ void GameWindow::play(GLFWwindow* window){
 }
 
 void GameWindow::restart(GLFWwindow* window){
+    std::cout << "\033[34m[INFO] Restarting the Game" << std::endl;
+
     // Empty all cached object data
     m_BulletInstances.clear();
     m_EnemyInstances.clear();
@@ -150,16 +152,16 @@ uint GameWindow::loadAndBufferImage(const char *filename, int width, int height)
 }
 
 void GameWindow::generate(){
-    std::cout << "\033[33m[INFO] Generate A Map" << std::endl;
+    std::cout << "\033[34m[INFO] Generate A Map" << std::endl;
     generateRandomMap();
 
-    std::cout << "\033[33m[INFO] Generate Exit Point Map" << std::endl;
+    std::cout << "\033[34m[INFO] Generate Exit Point Map" << std::endl;
     generateExitPoints();
 
-    std::cout << "\033[33m[INFO] Init Player" << std::endl;    
+    std::cout << "\033[34m[INFO] Init Player" << std::endl;    
     initPlayer();
 
-    std::cout << "\033[33m[INFO] End of generation" << std::endl;
+    std::cout << "\033[34m[INFO] End of generation" << std::endl;
 }
 
 void GameWindow::generateRandomMap(){
@@ -358,10 +360,13 @@ bool GameWindow::isPositionValid(Vector2<int> &position, int min_row, int max_ro
 }
 
 void GameWindow::firePlayerBullet(){
-    std::unique_ptr<Projectile> bullet = std::make_unique<Projectile>(m_TextureBulletID,
-                                                              m_Player->getPosition() + Vector2<float>(20.0f, 0.0f), PlayerBullet);
-    Vector2<float> bullet_relative_speed(std::cos(utility::angle2Rad(m_Player->getRotation())) * 4.0f,
-                                         std::sin(utility::angle2Rad(m_Player->getRotation())) * 4.0f);
+    Vector2<float> bulletPosition = m_Player->getPosition() + Vector2<float>(std::cos(m_Player->getRotation()) * (SQUARE_SIZE / 2),
+                                                                             std::sin(m_Player->getRotation()) * (SQUARE_SIZE / 2));
+
+    std::unique_ptr<Projectile> bullet = std::make_unique<Projectile>(m_TextureBulletID, bulletPosition, PlayerBullet);
+    
+    Vector2<float> bullet_relative_speed(std::cos(utility::angle2Rad(m_Player->getRotation())) * BULLET_SPEED,
+                                         std::sin(utility::angle2Rad(m_Player->getRotation())) * BULLET_SPEED);
 
     bullet->setVelocity(bullet_relative_speed);
     bullet->setRotation(m_Player->getRotation());
@@ -440,7 +445,7 @@ void GameWindow::spawnEnemies(){
             targetEnemyType = SuicideBomber;
         }
 
-        std::cout << "\033[31m[INFO] " << "Spawn Enemy Type : " << targetEnemyType << std::endl;
+        std::cout << "\033[32m[INFO] " << "Spawn Enemy Type : " << targetEnemyType << std::endl;
             
 
         // Spawn

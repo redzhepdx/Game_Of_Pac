@@ -11,6 +11,7 @@
 #include <stack>
 #include <iterator>
 #include <unordered_set>
+#include <cmath>
 
 #define GL_GLEXT_PROTOTYPES
 

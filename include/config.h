@@ -55,6 +55,7 @@ constexpr int   MAX_ACTIVE_BULLET_COUNT = 20;
 // RL Agent Hyper-parameters
 constexpr int16_t AGENT_UPDATE_RATE  = 2;
 constexpr int16_t TRAIN_EVERY        = 16;
+constexpr int16_t SAVE_EVERY         = 200;
 constexpr int32_t SEED               = 1337;
 constexpr int32_t STATE_SIZE         = 1765;
 constexpr int32_t ACTION_SIZE        = 8;
@@ -67,7 +68,6 @@ constexpr float   EPS                = 0.3f;
 constexpr float   EPS_REDUCTION      = 0.3f;
 constexpr float   TAU                = 0.2f;
 constexpr float   GAMMA              = 0.1f;
-
 
 // Player Settings
 constexpr int INITIAL_PLAYER_HEALTH = 100;

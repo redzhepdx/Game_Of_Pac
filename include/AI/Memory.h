@@ -41,9 +41,11 @@ private:
 
     boost::circular_buffer_space_optimized<Experience> m_Buffer;
 
+    torch::Device m_Device;
+
 public:
-    ReplayMemory(int32_t action_size, int32_t buffer_size, int32_t batch_size):
-                m_ActionSize(action_size), m_BufferSize(buffer_size), m_BatchSize(batch_size)
+    ReplayMemory(int32_t action_size, int32_t buffer_size, int32_t batch_size, torch::Device device):
+                m_ActionSize(action_size), m_BufferSize(buffer_size), m_BatchSize(batch_size), m_Device(device)
     {
         m_Buffer.set_capacity(m_BufferSize);
     }
@@ -79,6 +81,12 @@ public:
             stacked_rewards              = torch::cat({stacked_rewards, torch::tensor((float)currentExperience.m_Reward).unsqueeze(0)});
             stacked_dones                = torch::cat({stacked_dones,   torch::tensor((uint8_t)currentExperience.m_Done).unsqueeze(0)});
         }
+
+        stacked_current_states = stacked_current_states.to(m_Device);
+        stacked_next_states = stacked_next_states.to(m_Device);
+        stacked_actions = stacked_actions.to(m_Device);
+        stacked_rewards = stacked_rewards.to(m_Device);
+        stacked_dones = stacked_dones.to(m_Device);
 
         GroupTensorExperience experiencesTensor = std::make_tuple(stacked_current_states, stacked_next_states, stacked_actions, stacked_rewards, stacked_dones);
         
