@@ -25,9 +25,10 @@ From Scratch OpenGL Game and ML Agent/Enemy
 - Enemy Respawn 
 - Cmake
 - Libtorch
+- AI [Needs Some Tuning]
 
-# BUG-FIXING
-- AI
+# PROBLEM
+- There is a memory leak that needs to solved!
 
 # IN-PROGRESS's
 - Refactoring : Code Organization 
