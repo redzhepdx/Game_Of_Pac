@@ -2,12 +2,13 @@
 #define __CONFIG_H_
 
 #include <torch/torch.h>
+#include "spdlog/spdlog.h"
 
 #define BOOST_LOG_DYN_LINK 1
 
 enum Direction { Left, Right, Up, Down};
 
-typedef struct{
+typedef struct VertexData{
     GLfloat positionCoordinates[3];
     GLfloat textureCoordinates[2];
 }VertexData, *PVertexData;
@@ -38,6 +39,7 @@ constexpr GLfloat SQUARE_SIZE              = 20.0f;
 constexpr float   MAX_ENEMY_SPAWN_DISTANCE = 160.0f;
 constexpr float   MIN_ENEMY_SPAWN_DISTANCE = 160.0f;
 constexpr float   SPAWN_DIST_REDUCTION     = 0.9f;
+constexpr float   MAP_TILE_PERCENTAGE      = 0.55;
 
 // Object Velocity and Size Settings
 constexpr float PLAYER_SPEED  = 3.0f;
@@ -53,25 +55,27 @@ constexpr float SNIPER_SIGHT_DISTANCE   = 300.0f;
 constexpr int   MAX_ACTIVE_BULLET_COUNT = 20;
 
 // RL Agent Hyper-parameters
-constexpr int16_t AGENT_UPDATE_RATE  = 2;
+constexpr int16_t AGENT_UPDATE_RATE  = 4;
 constexpr int16_t TRAIN_EVERY        = 16;
 constexpr int16_t SAVE_EVERY         = 200;
 constexpr int32_t SEED               = 1337;
 constexpr int32_t STATE_SIZE         = 1765;
 constexpr int32_t ACTION_SIZE        = 8;
-constexpr int32_t EXPLORATION_UPDATE = 100;
-constexpr int32_t BUFFER_SIZE        = 1000;
-constexpr int32_t BATCH_SIZE         = 512;
+constexpr int32_t EXPLORATION_UPDATE = 5000;
+constexpr int32_t BUFFER_SIZE        = 10000;
+constexpr int32_t BATCH_SIZE         = 256;
 
-constexpr float   LR_RATE            = 0.001;
-constexpr float   EPS                = 0.3f;
-constexpr float   EPS_REDUCTION      = 0.3f;
+constexpr float   LR_RATE            = 0.0001;
+constexpr float   EPS                = 0.8f;
+constexpr float   EPS_REDUCTION      = 0.9f;
+constexpr float   MIN_EPS            = 0.05f;
 constexpr float   TAU                = 0.2f;
 constexpr float   GAMMA              = 0.1f;
 
 // Player Settings
-constexpr int INITIAL_PLAYER_HEALTH = 100;
-constexpr int HEALTH_LOSS_AFTER_HIT = 10;
+constexpr int INITIAL_PLAYER_HEALTH  = 100;
+constexpr int INITIAL_PLAYER_BULLETS = 10;
+constexpr int HEALTH_LOSS_AFTER_HIT  = 10;
 
 // Texture Settings
 constexpr VertexData VERTICES[4] = {
@@ -97,6 +101,39 @@ typedef struct GameState
     std::vector<Vector2<float>> m_ActiveBulletPositions;
     std::vector<float> m_ActiveBulletDirections;
 
+    static std::unique_ptr<GameState> createGameState(Vector2<float> player_pos, 
+                                               int available_projectiles, int time_to_teleport, 
+                                               tile_type_matrix tiles, 
+                                               std::vector<Vector2<float>> enemy_positions,
+                                               std::vector<Vector2<float>> bullet_positions,
+                                               std::vector<float> bullet_directions){
+        std::unique_ptr<GameState> state = std::make_unique<GameState>();
+
+        state->m_PlayerPos              = player_pos;
+        state->m_AvailableProjectiles   = available_projectiles;
+        state->m_TimeToTeleport         = time_to_teleport;
+        state->m_Tiles                  = tiles;
+
+        state->m_EnemyPositions         = enemy_positions;
+        state->m_ActiveBulletPositions  = bullet_positions;
+        state->m_ActiveBulletDirections = bullet_directions;
+
+        return state;
+
+    }
+
+    std::unique_ptr<GameState> copy(){
+        std::unique_ptr<GameState> copyState = std::make_unique<GameState>();
+        copyState->m_PlayerPos              = m_PlayerPos;
+        copyState->m_AvailableProjectiles   = m_AvailableProjectiles;
+        copyState->m_TimeToTeleport         = m_TimeToTeleport;
+        copyState->m_Tiles                  = m_Tiles;
+        copyState->m_EnemyPositions         = m_EnemyPositions;
+        copyState->m_ActiveBulletPositions  = m_ActiveBulletPositions;
+        copyState->m_ActiveBulletDirections = m_ActiveBulletDirections;
+        return copyState;
+    }
+
     torch::Tensor toTensor(){
         std::vector<float> stateVector;
 
@@ -104,7 +141,7 @@ typedef struct GameState
         stateVector.push_back(m_PlayerPos.y / WIDTH);
 
         stateVector.push_back((float)m_AvailableProjectiles);
-        stateVector.push_back(m_TimeToTeleport);
+        stateVector.push_back(m_TimeToTeleport / PLAYER_TP_TICKS);
 
         auto VectorInsert = [&](Vector2<float> pos){ 
             stateVector.push_back(pos.x / HEIGHT); 
@@ -134,19 +171,19 @@ typedef struct GameState
     }
 
     void printState(){
-        std::cout << "\033[35m[STATE INFO] " << "PlayerPos : " << m_PlayerPos.x << " " << m_PlayerPos.y << std::endl;
-        std::cout << "\033[35m[STATE INFO] " << "Time to Teleport : " << m_TimeToTeleport << std::endl;
-        std::cout << "\033[35m[STATE INFO] " << "m_AvailableProjectiles : " << m_AvailableProjectiles << std::endl;
-        std::cout << "\033[35m[STATE INFO] " << "ENEMY POSITIONS : \n" << std::endl;
-
+        spdlog::info("State Description");
+        spdlog::info("PlayerPos : {} - {}", m_PlayerPos.x, m_PlayerPos.y);
+        spdlog::info("Time to Teleport : {} - {}", m_TimeToTeleport);
+        spdlog::info("m_AvailableProjectiles : {}", m_AvailableProjectiles);
+        
+        spdlog::info("ENEMY POSITIONS : ");
         for(Vector2<float> pos : m_EnemyPositions){
-            std::cout << pos.x << " " << pos.y << std::endl;
+            spdlog::info("{} - {}", pos.x, pos.y);
         }
 
-        std::cout << "\033[35m[STATE INFO] " << "BULLET POSITIONS : \n" << std::endl;
-        
+        spdlog::info("BULLET POSITIONS : ");
         for(Vector2<float> pos : m_ActiveBulletPositions){
-            std::cout << pos.x << " " << pos.y << std::endl;
+            spdlog::info("{} - {}", pos.x, pos.y);
         }
     }
 

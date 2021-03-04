@@ -4,14 +4,6 @@
 #include "prefix.h"
 #include "config.h"
 
-//#include "utils.h"
-
-typedef struct{
-    uint enemyCount=20;
-    float tilePercent;
-}GameSettings, *PGameSettings;
-
-
 // Quadtree declarations
 typedef struct
 {
@@ -19,7 +11,7 @@ typedef struct
     std::size_t id;
 }QuadTreeNode, *PQuadTreeNode;
 
-typedef struct{
+typedef struct EnemyConfig{
     int enemyCount           = ENEMY_COUNT;
     int enemySpawnDistance   = MAX_ENEMY_SPAWN_DISTANCE;
     int chaserCount          = 3;
@@ -62,7 +54,7 @@ private:
     std::unique_ptr<EnemyConfig> m_EnemyConfig;
 
     // Game Control Settings
-    float m_TilePercent = 0.55f;
+    float m_TilePercent = MAP_TILE_PERCENTAGE;
 
     // Timers
     int m_SpawnTicks     = 0;
@@ -125,7 +117,7 @@ private:
 
 private:
     // Environment Functions
-    std::shared_ptr<GameState> getCurrentGameState();
+    std::unique_ptr<GameState> getCurrentGameState();
 
 public:
     GameWindow(bool status, int width, int height);

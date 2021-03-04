@@ -33,13 +33,13 @@ private:
 	PlayerControl m_ControlType;
 	std::unique_ptr<Agent> m_Agent;
 
-	std::shared_ptr<GameState> m_PrevGameState{nullptr};
+	std::unique_ptr<GameState> m_PrevGameState{nullptr};
 	uint32_t m_PrevAction = -1;
 	float    m_PrevReward = -1;
 	
 
 public:
-	uint m_BulletCount=10;
+	uint m_BulletCount = INITIAL_PLAYER_BULLETS;
 
 public:
 	Player();
@@ -71,10 +71,10 @@ public:
 
     uint TextureBufferID();
 	
-	void update(GLFWwindow* window, std::shared_ptr<GameState> currentState);
+	void update(GLFWwindow* window, std::unique_ptr<GameState> currentState);
 
 	// This is for ai but it will play a role in the future
-	void updateAgent(std::shared_ptr<GameState> currentState);
+	void updateAgent(std::unique_ptr<GameState> currentState);
 
 	void manualControlPlayer(GLFWwindow* window);
 

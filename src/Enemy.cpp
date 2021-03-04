@@ -117,7 +117,7 @@ void Enemy::update(Vector2<float> playerPos, shared_point_matrix grid){
 		{
 			// Pick a random spot and explode if player is in range
 			suicideBomberUpdate(playerPos, grid);
-			std::cout << "Boom" << std::endl;
+			spdlog::info("Boom Exploded!");
 			
 		}
 		break;
@@ -126,8 +126,7 @@ void Enemy::update(Vector2<float> playerPos, shared_point_matrix grid){
 		{
 			// Duplicate of player but controlled by an algorithm
 			aiUpdate(playerPos, grid);
-			std::cout << "AI My Friend! Artificial Intelligence" << std::endl;
-			
+			spdlog::info("AI My Friend! Artificial Intelligence");
 		}
 		break;
 	}

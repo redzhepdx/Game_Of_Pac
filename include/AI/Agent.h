@@ -7,14 +7,17 @@
 #include <random>
 #include <ctime>
 
+#define BOOST_NO_CXX11_SCOPED_ENUMS
 #include <boost/filesystem.hpp>
-#include <boost/range/combine.hpp>
+#undef BOOST_NO_CXX11_SCOPED_ENUMS
 
 #include "config.h"
 
 #include "Network.h"
 #include "Utility.h"
 #include "Memory.h"
+
+#include "spdlog/spdlog.h"
 
 class Agent{
 
@@ -64,16 +67,13 @@ public:
         m_ActorLocal->to(m_Device);
         m_ActorTarget->to(m_Device);
 
-        this->initWeights(m_ActorLocal);
-        this->initWeights(m_ActorTarget);
-
         this->printNetworks();
 
         this->loadNetworks();
     }
 
-    void step(std::shared_ptr<GameState> current_state, int action, float reward, std::shared_ptr<GameState> next_state, bool done){
-        m_Memory->add(current_state, action, reward, next_state, done);
+    void step(std::unique_ptr<GameState> current_state, int action, float reward, std::unique_ptr<GameState> next_state, bool done){
+        m_Memory->add(std::move(current_state), action, reward, std::move(next_state), done);
 
 
         if(m_Memory->capacity() > BATCH_SIZE && m_Step % TRAIN_EVERY == 0){
@@ -86,8 +86,9 @@ public:
         }
         
         // Update Epsilon
-        if(m_Step % EXPLORATION_UPDATE == 0){
+        if(m_Step % EXPLORATION_UPDATE == 0 && m_Epsilon > MIN_EPS){
             m_Epsilon *= EPS_REDUCTION;
+            spdlog::info("Random Exploration Rate Reduction -> New Value : {}", m_Epsilon);
         }
 
         ++m_Step;
@@ -128,16 +129,14 @@ public:
         loss.backward();
         m_Optimizer->step();
 
-        // std::cout << "[INFO]Loss : " << loss.item<double>() << std::endl;
-        std::cout << "\033[31m[INFO] Loss : " << loss.item<double>() << std::endl;
+        spdlog::info("Loss : {}", loss.item<double>());
 
         if(m_Step % AGENT_UPDATE_RATE == 0){
-            std::cout << "\033[33;35m[CHECK] Replay Memory Capacity : " << m_Memory->capacity() << std::endl;
             this->softUpdate();
         }
     }
 
-    uint32_t act(std::shared_ptr<GameState> state){
+    uint32_t act(std::unique_ptr<GameState> state){
         float random_value = ((float)std::rand() / RAND_MAX);
 
         if(random_value > m_Epsilon){
@@ -149,16 +148,15 @@ public:
             torch::autograd::GradMode::set_enabled(false);
 
             auto action_values = m_ActorLocal->forward(stateTensor);
-            // std::cout << "\033[38m[INFO] Prediction : " << action_values << std::endl;
-            
+
             // Unlock the Gradient Calculations
             torch::autograd::GradMode::set_enabled(true);
 
             m_ActorLocal->train();
         
-            auto action = torch::argmax(action_values.cpu());
+            auto action = torch::argmax(action_values.detach().cpu());
             return (uint32_t)action.item<int>();
-        }
+         }
         
         return (uint32_t) (std::rand() % m_ActionSize);
     }
@@ -182,7 +180,6 @@ public:
                 }
             }
         }
-
         torch::autograd::GradMode::set_enabled(true);
     }
 
@@ -192,7 +189,7 @@ public:
 
     void printNetwork(const DeepQNetwork network){
         for (const auto& p : network->parameters()) {
-            std::cout << p.sizes() << std::endl;
+            std::cout << p.sizes() << "\n";
         }
     }
 
@@ -217,9 +214,9 @@ public:
     }
 
     void printNetworks() {
-        std::cout << "-----------------------Actor Local-------------------" << std::endl;
+        spdlog::info("-----------------------Actor Local-------------------" );
         printNetwork(m_ActorLocal);
-        std::cout << "-----------------------Actor Target------------------" << std::endl;
+        spdlog::info("-----------------------Actor Target------------------" );
         printNetwork(m_ActorTarget);
     }
 
@@ -230,28 +227,31 @@ public:
     }
 
     void saveNetworks(){
-        std::cout << "\033[35m[INFO] Saving Networks" << std::endl;
+        spdlog::info("Saving Networks");
 
         saveNetwork(m_ActorLocal, "ActorLocal.pt");
         saveNetwork(m_ActorTarget, "ActorTarget.pt");
     }
 
     void loadNetwork(DeepQNetwork& network, std::string model_path){
-        if(boost::filesystem::exists(model_path)){
+        if(boost::filesystem::exists(model_path.c_str())){
             torch::serialize::InputArchive archive;
             archive.load_from(model_path);
             network->load(archive);
+            m_Epsilon = MIN_EPS;
         }
         else{
-            std::cout << "\033[35m[INFO] There is no " << model_path << " named file!" << std::endl;
+            spdlog::info("There is no {} named file!", model_path);
+            spdlog::info("Random Weight Initialization");
+            initWeights(network);
         }
     }
 
     void loadNetworks(){
-        std::cout << "\033[35m[INFO] Loading Networks" << std::endl;
+        spdlog::info("Loading Pretrained Networks");
 
-        saveNetwork(m_ActorLocal, "ActorLocal.pt");
-        saveNetwork(m_ActorTarget, "ActorTarget.pt");
+        loadNetwork(m_ActorLocal, "ActorLocal.pt");
+        loadNetwork(m_ActorTarget, "ActorTarget.pt");
     }
 };
 

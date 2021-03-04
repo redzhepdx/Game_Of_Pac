@@ -20,6 +20,7 @@
 #include <GL/gl.h>
 #include <SOIL/SOIL.h>
 #include <bsd/stdlib.h>
+#include "spdlog/spdlog.h"
 
 #include "Sprite.h"
 #include "Player.h"

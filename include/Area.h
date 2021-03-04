@@ -5,7 +5,8 @@
 #include <stdlib.h>
 #include <memory>
 
-typedef struct{
+typedef struct Bbox{
+public:
 	float bottom;
 	float top;
 	float left;
@@ -15,7 +16,7 @@ typedef struct{
 class Area{
 
 public:
-	pBox m_Box;
+	std::unique_ptr<Bbox> m_Box;
 
 public:
 	Area();

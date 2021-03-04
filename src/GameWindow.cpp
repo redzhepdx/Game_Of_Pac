@@ -24,8 +24,6 @@ GameWindow::~GameWindow(){
     glDeleteTextures(1, &m_TextureBufferID);
     glDeleteTextures(1, &m_TextureBulletID);
     glDeleteTextures(1, &m_TextureEnemyID);
-
-    free(m_GameArena->m_Box);
 }
 
 void GameWindow::play(GLFWwindow* window){
@@ -51,7 +49,7 @@ void GameWindow::play(GLFWwindow* window){
                 --deltaTime;
 
                 if(INFO_LOG){
-                    std::cout << "\033[33m[INFO] FPS : " << num_frames << std::endl;
+                    spdlog::info("FPS : {}", num_frames);
                 }
 
                 num_frames = 0;
@@ -64,7 +62,7 @@ void GameWindow::play(GLFWwindow* window){
 }
 
 void GameWindow::restart(GLFWwindow* window){
-    std::cout << "\033[34m[INFO] Restarting the Game" << std::endl;
+    spdlog::info("Restarting the Game...");
 
     // Empty all cached object data
     m_BulletInstances.clear();
@@ -72,6 +70,9 @@ void GameWindow::restart(GLFWwindow* window){
     m_Tiles.clear();
     m_EmptyTiles.clear();
     m_Grid.clear();
+
+    m_EnemyConfig->chaserCount = 3;
+    m_EnemyConfig->sniperCount = 3;
     
     // Reset Maze
     setupArena();
@@ -152,16 +153,16 @@ uint GameWindow::loadAndBufferImage(const char *filename, int width, int height)
 }
 
 void GameWindow::generate(){
-    std::cout << "\033[34m[INFO] Generate A Map" << std::endl;
+    spdlog::info("Generating A New Map...");
     generateRandomMap();
 
-    std::cout << "\033[34m[INFO] Generate Exit Point Map" << std::endl;
+    spdlog::info("Generating Teleportation Cells...");
     generateExitPoints();
 
-    std::cout << "\033[34m[INFO] Init Player" << std::endl;    
+    spdlog::info("Initializing The Player..");
     initPlayer();
 
-    std::cout << "\033[34m[INFO] End of generation" << std::endl;
+    spdlog::info("End of Generation");
 }
 
 void GameWindow::generateRandomMap(){
@@ -445,7 +446,7 @@ void GameWindow::spawnEnemies(){
             targetEnemyType = SuicideBomber;
         }
 
-        std::cout << "\033[32m[INFO] " << "Spawn Enemy Type : " << targetEnemyType << std::endl;
+        spdlog::info("Spawned Enemy Type : {}", targetEnemyType);
             
 
         // Spawn
@@ -561,7 +562,7 @@ void GameWindow::handleCollisions(){
             m_Player->setHealth(m_Player->getHealth() - HEALTH_LOSS_AFTER_HIT);
             
             if(DEBUG_LOG){
-                std::cout << "\033[31m[INFO] " << "Current Player Health [BULLET] : " << m_Player->getHealth() << std::endl;
+                spdlog::debug("Current Player Health After Bullet Hit : {}", m_Player->getHealth());
             }
                 
             continue;
@@ -618,7 +619,7 @@ void GameWindow::handleCollisions(){
                            
             if(DEBUG_LOG)
             {
-                std::cout << "\033[33m[INFO] " << "Current Player Health : " << m_Player->getHealth() << std::endl;
+                spdlog::debug("Current Player Health After Enemy Collision : {}", m_Player->getHealth());
             }
             
             continue;
@@ -636,8 +637,8 @@ void GameWindow::handleCollisions(){
             if(checkObjectCollision(bulletArea, enemyArea)){
                 m_Player->addScore(ENEMY_DESTROY_POINTS);
 
-                std::cout << "\033[33m[INFO] " << "Current Player Score : " << m_Player->getScore() << std::endl;
-                
+                spdlog::info("Current Player Score : {}", m_Player->getScore());
+
                 // Remove a bullet
                 m_BulletInstances[bulletIdx] = std::move(m_BulletInstances.back());
                 m_BulletInstances.pop_back();
@@ -719,7 +720,7 @@ void GameWindow::update(GLFWwindow* window){
         tile->update(window);
     }
 
-    m_Player->update(window, this->getCurrentGameState());
+    m_Player->update(window, std::move(this->getCurrentGameState()));
     
     // Random Restart Check!
     if(glfwGetKey(window, GLFW_KEY_U) == GLFW_TRUE){
@@ -774,11 +775,10 @@ void GameWindow::test_path_finding(Vector2<float> target_pos){
     
     std::vector<Vector2<int>> route = utility::findRoute(m_Maze->m_Matrix, m_Grid, player_pos_tile, random_target);
     
-    std::cout << "Player row : " << player_pos_tile.x << " col : " << player_pos_tile.y << std::endl;
-    std::cout << route.size() << std::endl;
+    spdlog::debug("Player Row : {} Col : {} Route Size : {}", player_pos_tile.x, player_pos_tile.y, route.size());
     
     for(auto tile : route){
-        std::cout << "T row : " << tile.x << " col : " << tile.y << std::endl;
+        spdlog::debug("Tile row : {} col : {}", tile.x, tile.y);
         
         std::unique_ptr<Sprite> rand_tile = std::make_unique<Sprite>(m_TextureTpID, Vector2<float>(SQUARE_SIZE * tile.y, m_Height - SQUARE_SIZE * tile.x));
 
@@ -788,7 +788,7 @@ void GameWindow::test_path_finding(Vector2<float> target_pos){
     std::cout << std::endl;
 }
 
-std::shared_ptr<GameState> GameWindow::getCurrentGameState(){
+std::unique_ptr<GameState> GameWindow::getCurrentGameState(){
 
     std::vector<Vector2<float>> enemy_positions;
     std::vector<Vector2<float>> bullet_positions;
@@ -806,13 +806,13 @@ std::shared_ptr<GameState> GameWindow::getCurrentGameState(){
 
 
 
-    std::shared_ptr<GameState> current_state = utility::createGameState(m_Player->getPosition(), 
-                                                                        m_Player->getRemainingBulletCount(), 
-                                                                        m_Player->getTimeToTeleport(), 
-                                                                        m_Maze->m_Matrix, 
-                                                                        enemy_positions,
-                                                                        bullet_positions,
-                                                                        bullet_directions);
+    std::unique_ptr<GameState> current_state = GameState::createGameState(m_Player->getPosition(), 
+                                                                          m_Player->getRemainingBulletCount(), 
+                                                                          m_Player->getTimeToTeleport(), 
+                                                                          m_Maze->m_Matrix, 
+                                                                          enemy_positions,
+                                                                          bullet_positions,
+                                                                          bullet_directions);
 
     return current_state;
 }

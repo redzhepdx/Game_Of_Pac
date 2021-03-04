@@ -11,11 +11,6 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 
 int main(int argc, const char * argv[])
 {
-    // std::unique_ptr<Agent> agent = std::make_unique<Agent>(515, 7);
-    // std::cout << "Agent Initialized!" << std::endl;
-    // agent->printNetworks();
-    // getchar();
-
     glfwInit();
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 

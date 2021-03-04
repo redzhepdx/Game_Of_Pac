@@ -64,6 +64,8 @@
         "ctime": "cpp",
         "cfenv": "cpp",
         "condition_variable": "cpp",
-        "map": "cpp"
+        "map": "cpp",
+        "filesystem": "cpp",
+        "codecvt": "cpp"
     }
 }

@@ -6,6 +6,7 @@
 #include<tuple>
 #include<random>
 #include<memory>
+#include<unordered_set>
 
 #include <boost/circular_buffer.hpp>
 
@@ -17,16 +18,16 @@ typedef std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, t
 
 // Current State, Action, Reward, Next State, Done!
 typedef struct Experience{
-    std::shared_ptr<GameState> m_CurrentState;
-    std::shared_ptr<GameState> m_NextState;
+    std::unique_ptr<GameState> m_CurrentState;
+    std::unique_ptr<GameState> m_NextState;
     int       m_Action;
     float     m_Reward;
     bool      m_Done;
 
     Experience(){}
 
-    Experience(std::shared_ptr<GameState> current_state, int action, float reward, std::shared_ptr<GameState> next_state, bool done) : 
-               m_CurrentState(current_state), m_Action(action), m_Reward(reward), m_NextState(next_state), m_Done(done)
+    Experience(std::unique_ptr<GameState> current_state, int action, float reward, std::unique_ptr<GameState> next_state, bool done) : 
+               m_CurrentState(std::move(current_state)), m_Action(action), m_Reward(reward), m_NextState(std::move(next_state)), m_Done(done)
     {
                    
     }
@@ -50,18 +51,23 @@ public:
         m_Buffer.set_capacity(m_BufferSize);
     }
 
-    void add(std::shared_ptr<GameState> current_state, int action, float reward, std::shared_ptr<GameState> next_state, bool done){
-        m_Buffer.push_front(Experience(current_state, action, reward, next_state, done));
+    void add(std::unique_ptr<GameState> current_state, int action, float reward, std::unique_ptr<GameState> next_state, bool done){
+        m_Buffer.push_back(Experience(std::move(current_state), action, reward, std::move(next_state), done));
+        spdlog::debug(m_Buffer.size());
     }
 
     GroupTensorExperience sample(){
-        
         std::random_device                 m_RandomDevice;
         std::mt19937                       random_engine(m_RandomDevice());
-        std::uniform_int_distribution<int> generator(0, m_BatchSize);
+        std::uniform_int_distribution<int> generator(0, m_Buffer.size() - 1);
 
-        std::vector<int> random_indices(m_BatchSize);
-        std::generate(random_indices.begin(), random_indices.end(), [&](){ return generator(random_engine); });
+        // Get n unique experiments
+        std::unordered_set<int> random_index_set;
+        while(random_index_set.size() != m_BatchSize){
+            random_index_set.insert(generator(random_engine));
+        }
+        std::vector<int> random_indices(random_index_set.begin(), random_index_set.end());
+        // std::generate(random_indices.begin(), random_indices.end(), [&](){ return generator(random_engine); });
 
         torch::Tensor stacked_current_states = m_Buffer[random_indices[0]].m_CurrentState->toTensor();
         torch::Tensor stacked_next_states    = m_Buffer[random_indices[0]].m_NextState->toTensor();
@@ -72,14 +78,13 @@ public:
 
         // Loop the current queue and stack the tensors
         for(int idx = 1; idx < m_BatchSize; ++idx){
-            Experience currentExperience = m_Buffer[random_indices[idx]];
 
-            stacked_current_states       = torch::cat({stacked_current_states, currentExperience.m_CurrentState->toTensor()}, 0);
-            stacked_next_states          = torch::cat({stacked_next_states,    currentExperience.m_NextState->toTensor()}, 0);
+            stacked_current_states       = torch::cat({stacked_current_states, m_Buffer[random_indices[idx]].m_CurrentState->toTensor()}, 0);
+            stacked_next_states          = torch::cat({stacked_next_states,    m_Buffer[random_indices[idx]].m_NextState->toTensor()},    0);
 
-            stacked_actions              = torch::cat({stacked_actions, torch::tensor((int64_t)currentExperience.m_Action).unsqueeze(0)});
-            stacked_rewards              = torch::cat({stacked_rewards, torch::tensor((float)currentExperience.m_Reward).unsqueeze(0)});
-            stacked_dones                = torch::cat({stacked_dones,   torch::tensor((uint8_t)currentExperience.m_Done).unsqueeze(0)});
+            stacked_actions              = torch::cat({stacked_actions, torch::tensor((int64_t)m_Buffer[random_indices[idx]].m_Action).unsqueeze(0)});
+            stacked_rewards              = torch::cat({stacked_rewards, torch::tensor((float)  m_Buffer[random_indices[idx]].m_Reward).unsqueeze(0)});
+            stacked_dones                = torch::cat({stacked_dones,   torch::tensor((uint8_t)m_Buffer[random_indices[idx]].m_Done).unsqueeze(0)});
         }
 
         stacked_current_states = stacked_current_states.to(m_Device);
@@ -89,7 +94,7 @@ public:
         stacked_dones = stacked_dones.to(m_Device);
 
         GroupTensorExperience experiencesTensor = std::make_tuple(stacked_current_states, stacked_next_states, stacked_actions, stacked_rewards, stacked_dones);
-        
+
         return experiencesTensor;
     }
 

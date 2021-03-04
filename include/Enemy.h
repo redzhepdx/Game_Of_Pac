@@ -6,6 +6,8 @@
 
 #include <GLFW/glfw3.h>
 
+#include "spdlog/spdlog.h"
+
 #include "Sprite.h"
 #include "utils.h"
 

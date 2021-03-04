@@ -74,7 +74,7 @@ void Player::setTextureBufferID(uint textureBufferID)
 }
 
 void Player::reset(){
-	std::cout << "\033[36m[INFO] Player Reset" << std::endl;
+	spdlog::info("Player Reset");
 	m_Health        = INITIAL_PLAYER_HEALTH;
 	m_PrevHealth    = INITIAL_PLAYER_HEALTH;
 	m_Score         = 0;
@@ -102,8 +102,7 @@ std::unique_ptr<Player> Player::Copy(){
 	return copy;
 }
 
-void Player::update(GLFWwindow* window, std::shared_ptr<GameState> currentState){
-	// std::cout << "\033[32m[CHECK] Use Count : " << currentState.use_count() << std::endl;;
+void Player::update(GLFWwindow* window, std::unique_ptr<GameState> currentState){
 	std::fill(m_Actions.begin(), m_Actions.end(), false);
 
 	if(this->m_Health <= 0){
@@ -207,13 +206,11 @@ void Player::executeActions(){
 
 	//Reload
 	if(m_Actions[6]){
-		// std::cout << "\033[32;34m[PLAYER ACTION] " <<  "- RELOAD! -" << std::endl;
 		this->m_BulletCount = 10;
 	}
 
 	// Shoot
 	if(m_Actions[7]){
-		// std::cout << "\033[32;34m[PLAYER ACTION] " <<  "- FIRE! -" << std::endl;
 		setFireStatus(true);
 	}
 }
@@ -253,21 +250,19 @@ void Player::manualControlPlayer(GLFWwindow* window){
 	}
 }
 
-void Player::updateAgent(std::shared_ptr<GameState> currentState){
-	uint32_t action = m_Agent->act(currentState);
+void Player::updateAgent(std::unique_ptr<GameState> currentState){
+	uint32_t action = m_Agent->act(std::move(currentState->copy()));
 
 	// if there is no score gain, punish little. If player gets a hit increase the punishment
 	float    reward = (m_Score - m_PrevScore - ENEMY_DESTROY_POINTS / 2) + (m_Health - m_PrevHealth);
 	bool     done   = (m_Health <= 0);
 
-	// std::cout << "\033[31;33m[INFO] " <<  "Step : " << m_Agent->totalStepCount() << " Action : " << action << " Reward : " << reward << " Done : " << done << std::endl;
-
 	// There is no observation
 	if(m_PrevAction != -1){
-		m_Agent->step(m_PrevGameState, m_PrevAction, m_PrevReward, currentState, done);
+		m_Agent->step(std::move(m_PrevGameState->copy()), m_PrevAction, m_PrevReward, std::move(currentState->copy()), done);
 	}
 
-	m_PrevGameState = currentState;
+	m_PrevGameState = std::move(currentState);
 	m_PrevAction    = action;
 	m_PrevReward    = reward;
 	m_PrevHealth    = m_Health;
@@ -275,7 +270,7 @@ void Player::updateAgent(std::shared_ptr<GameState> currentState){
 
 
 	if(m_Agent->totalStepCount() % 100 == 0){
-		std::cout << "\033[32;36m[INFO] " <<  "Current Score : " << m_PrevScore << std::endl;
+		spdlog::info("Current Player Score : {}", m_PrevScore);
 	}
 
 	// Execute a single Action

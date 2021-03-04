@@ -20,27 +20,6 @@ typedef std::vector<std::vector<std::shared_ptr<Point>>> shared_point_matrix;
 
 namespace utility{
 
-static inline std::shared_ptr<GameState> createGameState(Vector2<float> player_pos, 
-                                                         int available_projectiles, int time_to_teleport, 
-                                                         tile_type_matrix tiles, 
-                                                         std::vector<Vector2<float>> enemy_positions,
-                                                         std::vector<Vector2<float>> bullet_positions,
-                                                         std::vector<float> bullet_directions)
-{    
-    std::shared_ptr<GameState> state = std::make_shared<GameState>();
-
-    state->m_PlayerPos              = player_pos;
-    state->m_AvailableProjectiles   = available_projectiles;
-    state->m_TimeToTeleport         = time_to_teleport;
-    state->m_Tiles                  = tiles;
-
-    state->m_EnemyPositions.assign(enemy_positions.begin(), enemy_positions.end());
-    state->m_ActiveBulletPositions.assign(bullet_positions.begin(), bullet_positions.end());
-    state->m_ActiveBulletDirections.assign(bullet_directions.begin(), bullet_directions.end());
-
-    return state;
-}
-
 static inline unsigned char * readImage(const char *filename, int width, int height){
     unsigned char *imageData;
     FILE *file;
