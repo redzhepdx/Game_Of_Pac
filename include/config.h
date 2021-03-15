@@ -2,9 +2,13 @@
 #define __CONFIG_H_
 
 #include <torch/torch.h>
+#include <torch/script.h>
 #include "spdlog/spdlog.h"
 
 #define BOOST_LOG_DYN_LINK 1
+
+#define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_OFF
+
 
 enum Direction { Left, Right, Up, Down};
 
@@ -59,14 +63,14 @@ constexpr int16_t AGENT_UPDATE_RATE  = 4;
 constexpr int16_t TRAIN_EVERY        = 16;
 constexpr int16_t SAVE_EVERY         = 200;
 constexpr int32_t SEED               = 1337;
-constexpr int32_t STATE_SIZE         = 1765;
+constexpr int32_t STATE_SIZE         = 1766;
 constexpr int32_t ACTION_SIZE        = 8;
 constexpr int32_t EXPLORATION_UPDATE = 5000;
 constexpr int32_t BUFFER_SIZE        = 10000;
-constexpr int32_t BATCH_SIZE         = 256;
+constexpr int32_t BATCH_SIZE         = 128;
 
 constexpr float   LR_RATE            = 0.0001;
-constexpr float   EPS                = 0.8f;
+constexpr float   EPS                = 1.0f;
 constexpr float   EPS_REDUCTION      = 0.9f;
 constexpr float   MIN_EPS            = 0.05f;
 constexpr float   TAU                = 0.2f;
@@ -92,8 +96,9 @@ typedef std::vector<std::vector<TileType>> tile_type_matrix;
 
 typedef struct GameState
 {
-    int              m_AvailableProjectiles;
+    float            m_AvailableProjectiles;
     float            m_TimeToTeleport;
+    float            m_PlayerHealth;
     Vector2<float>   m_PlayerPos;
     tile_type_matrix m_Tiles;
     
@@ -102,7 +107,7 @@ typedef struct GameState
     std::vector<float> m_ActiveBulletDirections;
 
     static std::unique_ptr<GameState> createGameState(Vector2<float> player_pos, 
-                                               int available_projectiles, int time_to_teleport, 
+                                               int available_projectiles, int time_to_teleport, int player_health, 
                                                tile_type_matrix tiles, 
                                                std::vector<Vector2<float>> enemy_positions,
                                                std::vector<Vector2<float>> bullet_positions,
@@ -112,6 +117,7 @@ typedef struct GameState
         state->m_PlayerPos              = player_pos;
         state->m_AvailableProjectiles   = available_projectiles;
         state->m_TimeToTeleport         = time_to_teleport;
+        state->m_PlayerHealth           = player_health;
         state->m_Tiles                  = tiles;
 
         state->m_EnemyPositions         = enemy_positions;
@@ -127,6 +133,7 @@ typedef struct GameState
         copyState->m_PlayerPos              = m_PlayerPos;
         copyState->m_AvailableProjectiles   = m_AvailableProjectiles;
         copyState->m_TimeToTeleport         = m_TimeToTeleport;
+        copyState->m_PlayerHealth           = m_PlayerHealth;
         copyState->m_Tiles                  = m_Tiles;
         copyState->m_EnemyPositions         = m_EnemyPositions;
         copyState->m_ActiveBulletPositions  = m_ActiveBulletPositions;
@@ -140,8 +147,9 @@ typedef struct GameState
         stateVector.push_back(m_PlayerPos.x / HEIGHT);
         stateVector.push_back(m_PlayerPos.y / WIDTH);
 
-        stateVector.push_back((float)m_AvailableProjectiles);
+        stateVector.push_back(m_AvailableProjectiles / INITIAL_PLAYER_BULLETS);
         stateVector.push_back(m_TimeToTeleport / PLAYER_TP_TICKS);
+        stateVector.push_back(m_PlayerHealth / INITIAL_PLAYER_HEALTH);
 
         auto VectorInsert = [&](Vector2<float> pos){ 
             stateVector.push_back(pos.x / HEIGHT); 
@@ -165,9 +173,8 @@ typedef struct GameState
             stateVector.insert(stateVector.end(), tile_vec.begin(), tile_vec.end());
         }
 
-        torch::Tensor stateTensor = torch::from_blob(stateVector.data(), {(long)stateVector.size()}, 
-                                                     torch::TensorOptions().dtype(torch::kFloat32)).to(torch::kFloat32).unsqueeze(0);
-        return stateTensor.clone();
+        torch::Tensor stateTensor = torch::tensor(stateVector).to(torch::kFloat32).unsqueeze(0);
+        return stateTensor;
     }
 
     void printState(){

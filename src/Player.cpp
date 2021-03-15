@@ -254,12 +254,12 @@ void Player::updateAgent(std::unique_ptr<GameState> currentState){
 	uint32_t action = m_Agent->act(std::move(currentState->copy()));
 
 	// if there is no score gain, punish little. If player gets a hit increase the punishment
-	float    reward = (m_Score - m_PrevScore - ENEMY_DESTROY_POINTS / 2) + (m_Health - m_PrevHealth);
+	float    reward = (m_Score - m_PrevScore - ENEMY_DESTROY_POINTS / 5.0f) + (m_Health - m_PrevHealth) / 5.0f;
 	bool     done   = (m_Health <= 0);
 
 	// There is no observation
 	if(m_PrevAction != -1){
-		m_Agent->step(std::move(m_PrevGameState->copy()), m_PrevAction, m_PrevReward, std::move(currentState->copy()), done);
+		m_Agent->step(std::move(m_PrevGameState->copy()), std::move(currentState->copy()), m_PrevAction, m_PrevReward, done);
 	}
 
 	m_PrevGameState = std::move(currentState);

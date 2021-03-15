@@ -51,7 +51,9 @@ private:
 
 public:
     Agent(int32_t state_size, int32_t action_size, torch::Device device) : m_StateSize(state_size), m_ActionSize(action_size), m_Device(device){
-
+        
+        at::globalContext().setBenchmarkCuDNN(true);
+        
         m_ActorLocal  = DeepQNetwork(m_StateSize, m_ActionSize);
         m_ActorTarget = DeepQNetwork(m_StateSize, m_ActionSize);
 
@@ -72,8 +74,8 @@ public:
         this->loadNetworks();
     }
 
-    void step(std::unique_ptr<GameState> current_state, int action, float reward, std::unique_ptr<GameState> next_state, bool done){
-        m_Memory->add(std::move(current_state), action, reward, std::move(next_state), done);
+    void step(std::unique_ptr<GameState> current_state, std::unique_ptr<GameState> next_state, int action, float reward, bool done){
+        m_Memory->add(std::move(current_state), std::move(next_state), action, reward, done);
 
 
         if(m_Memory->capacity() > BATCH_SIZE && m_Step % TRAIN_EVERY == 0){
@@ -147,14 +149,14 @@ public:
             // Lock Gradient Calculations
             torch::autograd::GradMode::set_enabled(false);
 
-            auto action_values = m_ActorLocal->forward(stateTensor);
+            auto action_values = m_ActorLocal->forward(stateTensor).detach();
 
             // Unlock the Gradient Calculations
             torch::autograd::GradMode::set_enabled(true);
 
             m_ActorLocal->train();
         
-            auto action = torch::argmax(action_values.detach().cpu());
+            auto action = torch::argmax(action_values).cpu();
             return (uint32_t)action.item<int>();
          }
         

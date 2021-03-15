@@ -41,6 +41,7 @@ public:
 	Vector2();
 	Vector2(T x, T y);
 	Vector2(const Vector2<T> &other);
+	~Vector2() = default;
 
 	T magnitute() const;
 	Vector2<T> normalize();

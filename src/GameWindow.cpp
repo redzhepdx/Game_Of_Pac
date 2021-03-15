@@ -27,11 +27,11 @@ GameWindow::~GameWindow(){
 }
 
 void GameWindow::play(GLFWwindow* window){
-    double lastTime    = glfwGetTime();
-    double deltaTime   = 0.0f;
-    double currentTime = 0.0f;
+    double lastTime      = glfwGetTime();
+    double deltaTime     = 0.0f;
+    double currentTime   = 0.0f;
     long long num_frames = 0;
-    
+
     while(getGameStatus()){
 
         if(m_Player->getHealth() <= 0){
@@ -119,7 +119,7 @@ void GameWindow::setupArena(){
     for(size_t row = 0; row < m_Maze->m_Height + 1; ++row)
     {
         std::vector<std::shared_ptr<Point>> inner_vec;
-        for(size_t col = 0; col < m_Maze->m_Height + 1; ++col)
+        for(size_t col = 0; col < m_Maze->m_Width + 1; ++col)
         {
             inner_vec.push_back(std::make_shared<Point>(Vector2<int>(row, col)));
         }
@@ -350,8 +350,8 @@ void GameWindow::initPlayer(){
     // Initialize Player
     m_Player->setPosition(Vector2<float>(randomPosition.y * SQUARE_SIZE,
                                             m_Width - randomPosition.x * SQUARE_SIZE));
-    m_Player->setArea(m_GameArena->Copy());
-    m_Player->setMaze(m_Maze->Copy());   
+    m_Player->setArea(std::move(m_GameArena->Copy()));
+    m_Player->setMaze(std::move(m_Maze->Copy()));   
 }
 
 bool GameWindow::isPositionValid(Vector2<int> &position, int min_row, int max_row, int min_col, int max_col){
@@ -371,8 +371,8 @@ void GameWindow::firePlayerBullet(){
 
     bullet->setVelocity(bullet_relative_speed);
     bullet->setRotation(m_Player->getRotation());
-    bullet->setArea(m_GameArena->Copy());
-    bullet->setMaze(m_Maze->Copy());
+    bullet->setArea(std::move(m_GameArena->Copy()));
+    bullet->setMaze(std::move(m_Maze->Copy()));
     bullet->setOffset(OBJECT_OFFSET);
 
     m_BulletInstances.push_back(std::move(bullet));
@@ -384,8 +384,8 @@ void GameWindow::fireEnemyBullet(Vector2<float> enemyPosition, Vector2<float> di
 
     enemyBullet->setVelocity(bullet_relative_speed);
     enemyBullet->setRotation(m_Player->getRotation());
-    enemyBullet->setArea(m_GameArena->Copy());
-    enemyBullet->setMaze(m_Maze->Copy());
+    enemyBullet->setArea(std::move(m_GameArena->Copy()));
+    enemyBullet->setMaze(std::move(m_Maze->Copy()));
     enemyBullet->setOffset(OBJECT_OFFSET);
 
     enemyBullet->setRotation(direction.angle());
@@ -451,12 +451,12 @@ void GameWindow::spawnEnemies(){
 
         // Spawn
         std::unique_ptr<Enemy> enemy = std::make_unique<Enemy>(m_TextureEnemyID, 
-                                                                Vector2<float>(randomPosition.y * SQUARE_SIZE, 
-                                                                                m_Width - randomPosition.x * SQUARE_SIZE), targetEnemyType);
+                                                               Vector2<float>(randomPosition.y * SQUARE_SIZE, 
+                                                                              m_Width - randomPosition.x * SQUARE_SIZE),
+                                                               targetEnemyType);
 
-        // enemy->setVelocity(Vector2<float>(-5.0f, 0.0f));
-        enemy->setArea(m_GameArena->Copy());
-        enemy->setMaze(m_Maze->Copy());
+        enemy->setArea(std::move(m_GameArena->Copy()));
+        enemy->setMaze(std::move(m_Maze->Copy()));
         enemy->setOffset(OBJECT_OFFSET);
         
         m_EnemyInstances.push_back(std::move(enemy));
@@ -495,16 +495,13 @@ bool GameWindow::checkStaticWallCollision(Vector2<float> position){
     return false;
 }
 
-bool GameWindow::checkObjectCollision(std::unique_ptr<Area> objectX, std::unique_ptr<Area> objectY){
+bool GameWindow::checkObjectCollision(std::unique_ptr<Area>& objectX, std::unique_ptr<Area>& objectY){
     //Intersection of Two Rectangle
     bool res =  !(objectX->m_Box->left   >= objectY->m_Box->right ||
                   objectX->m_Box->right  <= objectY->m_Box->left ||
                   objectX->m_Box->top    <= objectY->m_Box->bottom  ||
                   objectX->m_Box->bottom >= objectY->m_Box->top);
 
-    //Avoid Memory Leak
-    // free(objectX->Box);
-    // free(objectY->Box);
     return res;
 }
 
@@ -542,7 +539,7 @@ void GameWindow::handleCollisions(){
     removeBullets(bulletsToDestroy, false);
 
 
-    std::shared_ptr<Area> rocketArea = std::make_shared<Area>(m_Player->getPosition().y,
+    std::unique_ptr<Area> rocketArea = std::make_unique<Area>(m_Player->getPosition().y,
                                                               m_Player->getPosition().y + SQUARE_SIZE,
                                                               m_Player->getPosition().x,
                                                               m_Player->getPosition().x + SQUARE_SIZE);
@@ -551,7 +548,7 @@ void GameWindow::handleCollisions(){
     for(unsigned int bulletIdx = 0; bulletIdx < m_EnemyBulletInstances.size(); ++bulletIdx){
         Vector2<float> bulletPosition = m_EnemyBulletInstances[bulletIdx]->getPosition();
 
-        std::shared_ptr<Area> enemyBulletArea = std::make_shared<Area>(bulletPosition.y, 
+        std::unique_ptr<Area> enemyBulletArea = std::make_unique<Area>(bulletPosition.y, 
                                                                  bulletPosition.y + SQUARE_SIZE,
                                                                  bulletPosition.x,
                                                                  bulletPosition.x + SQUARE_SIZE
@@ -562,7 +559,7 @@ void GameWindow::handleCollisions(){
             m_Player->setHealth(m_Player->getHealth() - HEALTH_LOSS_AFTER_HIT);
             
             if(DEBUG_LOG){
-                spdlog::debug("Current Player Health After Bullet Hit : {}", m_Player->getHealth());
+                spdlog::critical("Current Player Health After Bullet Hit : {}", m_Player->getHealth());
             }
                 
             continue;
@@ -587,7 +584,7 @@ void GameWindow::handleCollisions(){
         Vector2<float> enemyPosition = m_EnemyInstances[enemyIdx]->getPosition();
 
         // Player Collision
-        std::shared_ptr<Area> enemyArea = std::make_shared<Area>(enemyPosition.y, 
+        std::unique_ptr<Area> enemyArea = std::make_unique<Area>(enemyPosition.y, 
                                                                  enemyPosition.y + SQUARE_SIZE,
                                                                  enemyPosition.x,
                                                                  enemyPosition.x + SQUARE_SIZE
@@ -614,12 +611,16 @@ void GameWindow::handleCollisions(){
                 {
                     ++m_EnemyConfig->suicideBomberCount;
                 }
+                case AI:
+                {
+                    spdlog::error("AI Enemy is not ready yet!");
+                }
                 break;
             }
                            
             if(DEBUG_LOG)
             {
-                spdlog::debug("Current Player Health After Enemy Collision : {}", m_Player->getHealth());
+                spdlog::critical("Current Player Health After Enemy Collision : {}", m_Player->getHealth());
             }
             
             continue;
@@ -628,8 +629,8 @@ void GameWindow::handleCollisions(){
         // Bullet Collision and Cleanup
         for(unsigned int bulletIdx = 0; bulletIdx < m_BulletInstances.size(); ++bulletIdx){
 
-            Vector2<float> bulletPosition = m_BulletInstances[bulletIdx]->getPosition();
-            std::shared_ptr<Area> bulletArea =  std::make_shared<Area>(bulletPosition.y, 
+            Vector2<float> bulletPosition    = m_BulletInstances[bulletIdx]->getPosition();
+            std::unique_ptr<Area> bulletArea =  std::make_unique<Area>(bulletPosition.y, 
                                                                        bulletPosition.y + SQUARE_SIZE,
                                                                        bulletPosition.x,
                                                                        bulletPosition.x + SQUARE_SIZE
@@ -709,7 +710,7 @@ void GameWindow::update(GLFWwindow* window){
             
             enemy->stopAction();
         }
-        enemy->update(m_Player->getPosition(), this->m_Grid);
+        enemy->update(m_Player->getPosition(), m_Grid);
     }
 
     for(const auto& enemyBullet : m_EnemyBulletInstances){
@@ -719,6 +720,7 @@ void GameWindow::update(GLFWwindow* window){
     for(const auto& tile : m_Tiles){
         tile->update(window);
     }
+
 
     m_Player->update(window, std::move(this->getCurrentGameState()));
     
@@ -775,10 +777,10 @@ void GameWindow::test_path_finding(Vector2<float> target_pos){
     
     std::vector<Vector2<int>> route = utility::findRoute(m_Maze->m_Matrix, m_Grid, player_pos_tile, random_target);
     
-    spdlog::debug("Player Row : {} Col : {} Route Size : {}", player_pos_tile.x, player_pos_tile.y, route.size());
+    spdlog::critical("Player Row : {} Col : {} Route Size : {}", player_pos_tile.x, player_pos_tile.y, route.size());
     
     for(auto tile : route){
-        spdlog::debug("Tile row : {} col : {}", tile.x, tile.y);
+        spdlog::critical("Tile row : {} col : {}", tile.x, tile.y);
         
         std::unique_ptr<Sprite> rand_tile = std::make_unique<Sprite>(m_TextureTpID, Vector2<float>(SQUARE_SIZE * tile.y, m_Height - SQUARE_SIZE * tile.x));
 
@@ -808,7 +810,8 @@ std::unique_ptr<GameState> GameWindow::getCurrentGameState(){
 
     std::unique_ptr<GameState> current_state = GameState::createGameState(m_Player->getPosition(), 
                                                                           m_Player->getRemainingBulletCount(), 
-                                                                          m_Player->getTimeToTeleport(), 
+                                                                          m_Player->getTimeToTeleport(),
+                                                                          m_Player->getHealth(),
                                                                           m_Maze->m_Matrix, 
                                                                           enemy_positions,
                                                                           bullet_positions,

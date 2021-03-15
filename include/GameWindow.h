@@ -100,8 +100,8 @@ private :
 
 private:
     // Collision Detections
-    void handleCollisions();
-    bool checkObjectCollision(std::unique_ptr<Area> objectX, std::unique_ptr<Area> objectY);
+    void handleCollisions(); 
+    bool checkObjectCollision(std::unique_ptr<Area>& objectX, std::unique_ptr<Area>& objectY);
     bool checkObjectCollision(std::shared_ptr<Area> objectX, std::shared_ptr<Area> objectY);
     bool isPositionValid(Vector2<int> &position, int min_row, int max_row, int min_col, int max_col);
     bool checkStaticWallCollision(Vector2<float> position);

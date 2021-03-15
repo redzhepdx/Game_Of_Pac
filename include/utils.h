@@ -111,7 +111,7 @@ static inline std::vector<Vector2<int>> findRoute(tile_type_matrix matrix,
         if(currentVertex->m_Coordinate == destVertex->m_Coordinate){
             while(currentVertex->m_Coordinate != startVertex->m_Coordinate){
                 route.push_back(Vector2<int>(currentVertex->m_Coordinate.x, currentVertex->m_Coordinate.y));
-                currentVertex = grid[currentVertex->m_Parent->m_Coordinate.x][currentVertex->m_Parent->m_Coordinate.y];
+                currentVertex = grid[currentVertex->m_Parent.lock()->m_Coordinate.x][currentVertex->m_Parent.lock()->m_Coordinate.y];
             }
             return route;
         }

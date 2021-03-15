@@ -53,5 +53,5 @@ std::unique_ptr<Maze> Maze::Copy(){
 	copy->m_Height = this->m_Height;
 	copy->m_Matrix = this->m_Matrix;
 
-	return copy;
+	return std::move(copy);
 }

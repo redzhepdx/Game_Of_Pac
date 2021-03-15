@@ -26,8 +26,8 @@ typedef struct Experience{
 
     Experience(){}
 
-    Experience(std::unique_ptr<GameState> current_state, int action, float reward, std::unique_ptr<GameState> next_state, bool done) : 
-               m_CurrentState(std::move(current_state)), m_Action(action), m_Reward(reward), m_NextState(std::move(next_state)), m_Done(done)
+    Experience(std::unique_ptr<GameState> current_state, std::unique_ptr<GameState> next_state, int action, float reward, bool done) : 
+               m_CurrentState(std::move(current_state)), m_NextState(std::move(next_state)), m_Action(action), m_Reward(reward), m_Done(done)
     {
                    
     }
@@ -51,9 +51,9 @@ public:
         m_Buffer.set_capacity(m_BufferSize);
     }
 
-    void add(std::unique_ptr<GameState> current_state, int action, float reward, std::unique_ptr<GameState> next_state, bool done){
-        m_Buffer.push_back(Experience(std::move(current_state), action, reward, std::move(next_state), done));
-        spdlog::debug(m_Buffer.size());
+    void add(std::unique_ptr<GameState> current_state, std::unique_ptr<GameState> next_state, int action, float reward, bool done){
+        m_Buffer.push_back(Experience(std::move(current_state), std::move(next_state), action, reward, done));
+        spdlog::debug("Buffer Size : {}", m_Buffer.size());
     }
 
     GroupTensorExperience sample(){

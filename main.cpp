@@ -2,6 +2,19 @@
 #include <config.h>
 #include <memory>
 
+#include "callstack/Callstack.h"
+#include "segvcatch.h"
+
+void handle_segv()
+{
+    throw std::runtime_error("SEGV");
+}
+
+void handle_fpe()
+{
+    throw std::runtime_error("FPE");
+}
+
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS){
@@ -11,6 +24,9 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 
 int main(int argc, const char * argv[])
 {
+    segvcatch::init_segv(&handle_segv);
+    segvcatch::init_fpe(&handle_fpe);
+
     glfwInit();
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
@@ -24,8 +40,17 @@ int main(int argc, const char * argv[])
 
     //Initialize this after window not before
     std::unique_ptr<GameWindow> gameWindow = std::make_unique<GameWindow>(true, (int)WIDTH, (int)HEIGHT);
+    
+    try{
+        gameWindow->play(window);
+    }
+    catch(std::exception& e){
+        spdlog::error("Exception Catched : {}", e.what());
 
-    gameWindow->play(window);
+        NL_RETURN(-1);
+    }
 
-    exit(EXIT_SUCCESS);
+    glfwDestroyWindow(window);
+    
+    NL_RETURN(0);
 }

@@ -22,5 +22,5 @@ std::unique_ptr<Area> Area::Copy(){
 	copy->m_Box->top           = this->m_Box->top;
 	copy->m_Box->left          = this->m_Box->left;
 	copy->m_Box->right         = this->m_Box->right;
-	return copy;
+	return std::move(copy);
 }
