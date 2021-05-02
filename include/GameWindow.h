@@ -14,7 +14,7 @@ typedef struct
 typedef struct EnemyConfig{
     int enemyCount           = ENEMY_COUNT;
     int enemySpawnDistance   = MAX_ENEMY_SPAWN_DISTANCE;
-    int chaserCount          = 3;
+    int chaserCount          = ENEMY_COUNT - 3;
     int sniperCount          = 3;
     int suicideBomberCount   = 0;
 }EnemyConfig;

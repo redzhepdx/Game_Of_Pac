@@ -146,24 +146,29 @@ void Enemy::chaserUpdate(Vector2<float> playerPos, shared_point_matrix grid){
 		// Get the route to player
 		std::vector<Vector2<int>> route = utility::findRoute(m_Maze->m_Matrix, grid, current_tile, player_tile_pos);
 
-		// Store new route to player
-		m_PrevRoute = route;
-		m_PrevPlayerTilePos = player_tile_pos;
+		if(route.size() > 0){
+			// Store new route to player
+			m_PrevRoute = route;
+			m_PrevPlayerTilePos = player_tile_pos;
 
-		// Move to next tile in the route
-		Vector2<int> nextTile = m_PrevRoute.back();
+			// Move to next tile in the route
+			Vector2<int> nextTile = m_PrevRoute.back();
 
-		// Store next and prev tile positions
-		m_NextTilePos = Vector2<float>(nextTile.y * SQUARE_SIZE, WIDTH - nextTile.x * SQUARE_SIZE);
-		m_PrevTilePos = Vector2<float>(current_tile.y * SQUARE_SIZE, WIDTH - current_tile.x * SQUARE_SIZE);
+			// Store next and prev tile positions
+			m_NextTilePos = Vector2<float>(nextTile.y * SQUARE_SIZE, WIDTH - nextTile.x * SQUARE_SIZE);
+			m_PrevTilePos = Vector2<float>(current_tile.y * SQUARE_SIZE, WIDTH - current_tile.x * SQUARE_SIZE);
 
-		// Directonaly movement to next tile
-		Vector2<float> dirToNext = (m_NextTilePos - current_tile_pos).normalize();
-		setVelocity(dirToNext * ENEMY_SPEED);
+			// Directonaly movement to next tile
+			Vector2<float> dirToNext = (m_NextTilePos - current_tile_pos).normalize();
+			setVelocity(dirToNext * ENEMY_SPEED);
 
-		m_Stuck = false;
+			m_Stuck = false;
+		}
 	}
 	else if(!moving_to_the_next_cell && chasing_on){
+		if(m_PrevRoute.size() == 0)
+			spdlog::critical("Empty Route");
+
 		// Remove the previous tile
 		m_PrevRoute.pop_back();
 		

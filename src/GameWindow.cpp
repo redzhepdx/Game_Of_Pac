@@ -187,11 +187,9 @@ void GameWindow::generateRandomMap(){
     stack.push(firstRandomPos);
     m_EmptyTiles.push_back(firstRandomPos);
 
-
     //DFS GENERATION
     while(m_EmptyTiles.size() <= m_MaxTileCount){
         Vector2<int> curr = stack.top();
-
 
         //Select Random Point Around
         std::vector<Vector2<int>> neighbour_tiles;
@@ -229,10 +227,14 @@ void GameWindow::generateExitPoints(){
     int max_row = static_cast<int>(m_Width / SQUARE_SIZE);
     int max_col = static_cast<int>(m_Height / SQUARE_SIZE) - 1;
 
+    std::random_device rd; // obtain a random number from hardware
+    std::mt19937 gen(rd()); // seed the generator
+    std::uniform_int_distribution<> dist_col(1, max_col - 2); // define the range
+    std::uniform_int_distribution<> dist_row(1, max_row - 1); // define the range
+
     // Random Teleport Tile Selection
-    // TODO BETTER LOGIC
-    int vertical_teleport_pos   = static_cast<int>((arc4random() % (max_col - 2)) + 1);
-    int horizontal_teleport_pos = static_cast<int>((arc4random() % (max_row - 1)) + 1); 
+    int vertical_teleport_pos   = static_cast<int>(dist_col(gen));
+    int horizontal_teleport_pos = static_cast<int>(dist_row(gen)); 
 
     Vector2<int> up_exit_tile(min_row, vertical_teleport_pos);
     Vector2<int> down_exit_tile(max_row, vertical_teleport_pos);
@@ -448,7 +450,6 @@ void GameWindow::spawnEnemies(){
 
         spdlog::info("Spawned Enemy Type : {}", targetEnemyType);
             
-
         // Spawn
         std::unique_ptr<Enemy> enemy = std::make_unique<Enemy>(m_TextureEnemyID, 
                                                                Vector2<float>(randomPosition.y * SQUARE_SIZE, 
