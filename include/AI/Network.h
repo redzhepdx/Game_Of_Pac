@@ -83,8 +83,7 @@ private:
     Linear m_FullyConnected1{{nullptr}};
     Linear m_FullyConnected2{{nullptr}};    
     Linear m_AdvantageOutput{{nullptr}};    
-    Linear m_ValueOutput{{nullptr}};    
-    // BatchNorm1d m_StateNormalizer{nullptr};
+    Linear m_ValueOutput{{nullptr}};
 };
 
 struct DeepQCNNNetworkImpl : public DQNetworkImpl{
@@ -119,20 +118,19 @@ private:
         torch::nn::Conv2d(Conv2dOptions(m_StateSize, 32, 8).stride(4)),
         torch::nn::BatchNorm2d(32),
         torch::nn::ReLU()
-    }; // 32 x 24 x 24
-
+    };
     torch::nn::Sequential m_ConvolutionBlock2{
         torch::nn::Conv2d(Conv2dOptions(32, 64, 4).stride(2).padding(2)),
         torch::nn::BatchNorm2d(64),
         torch::nn::ReLU()
-    }; // 64 x 11 x 11 
+    };
 
 
     torch::nn::Sequential m_ConvolutionBlock3{
         torch::nn::Conv2d(Conv2dOptions(64, 32, 3).stride(1)),
         torch::nn::BatchNorm2d(32),
         torch::nn::ReLU()
-    }; // 32 x 8 x 8
+    }; // 32 x 11 x 11
 
     torch::nn::Linear m_FullyConnected{{nullptr}};
 };
@@ -162,7 +160,7 @@ public:
         auto feature = m_ConvolutionBlock1->forward(state / 255.0);
         feature = m_ConvolutionBlock2->forward(feature);
         feature = m_ConvolutionBlock3->forward(feature);
-        
+
         // Flatten
         feature = feature.view({feature.size(0), -1});
 
@@ -180,20 +178,20 @@ private:
         torch::nn::Conv2d(Conv2dOptions(m_StateSize, 32, 8).stride(4)),
         torch::nn::BatchNorm2d(32),
         torch::nn::ReLU()
-    }; // 32 x 24 x 24
+    };
 
     torch::nn::Sequential m_ConvolutionBlock2{
         torch::nn::Conv2d(Conv2dOptions(32, 64, 4).stride(2).padding(2)),
         torch::nn::BatchNorm2d(64),
         torch::nn::ReLU()
-    }; // 64 x 11 x 11 
+    }; 
 
 
     torch::nn::Sequential m_ConvolutionBlock3{
         torch::nn::Conv2d(Conv2dOptions(64, 32, 3).stride(1)),
         torch::nn::BatchNorm2d(32),
         torch::nn::ReLU()
-    }; // 32 x 8 x 8
+    }; // 32 x 11 x 11
 
     torch::nn::Linear m_Value{{nullptr}};
     torch::nn::Linear m_Advantages{{nullptr}};
