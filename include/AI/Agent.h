@@ -16,29 +16,32 @@
 #include "Network.h"
 #include "Utility.h"
 #include "Memory.h"
+#include "GameState.h"
 
 #include "spdlog/spdlog.h"
 
 class Agent{
 
 private:
-    int32_t m_StateSize;
-    int32_t m_ActionSize;
+    int32_t m_StateSize  = 100;
+    int32_t m_ActionSize = 8;
 
-    int16_t m_UpdateRate = AGENT_UPDATE_RATE;
-    int64_t m_Step = 0;
+    int16_t m_UpdateRate = 100;
+    int64_t m_Step       = 0;
 
-    float m_Epsilon;
+    float m_Epsilon      = 1.0;
 
-    std::unique_ptr<OUNoise> m_Noise;
-    std::unique_ptr<ReplayMemory> m_Memory;
+    ObservationType m_ObservationType = Internal;
 
-    DeepQNetwork m_ActorLocal{nullptr};
-    DeepQNetwork m_ActorTarget{nullptr};
+    std::unique_ptr<OUNoise>      m_Noise{nullptr};
+    std::unique_ptr<ReplayMemory> m_Memory{nullptr};
 
-    std::unique_ptr<torch::optim::Adam> m_Optimizer;
+    std::shared_ptr<DQNetworkImpl> m_ActorLocal{nullptr};
+    std::shared_ptr<DQNetworkImpl> m_ActorTarget{nullptr};
 
-    torch::Device m_Device;
+    std::unique_ptr<torch::optim::Adam> m_Optimizer{nullptr};
+
+    torch::Device m_Device = torch::kCPU;
 
 private:
     void updateLearningRate(float new_lr_rate){
@@ -50,18 +53,24 @@ private:
     }
 
 public:
-    Agent(int32_t state_size, int32_t action_size, torch::Device device) : m_StateSize(state_size), m_ActionSize(action_size), m_Device(device){
+    Agent(int32_t state_size, int32_t action_size, torch::Device device, ObservationType observation_type) 
+                                : m_StateSize(state_size), m_ActionSize(action_size), m_Device(device), m_ObservationType(observation_type){
         
         at::globalContext().setBenchmarkCuDNN(true);
+        if(m_ObservationType == Image){
+            m_ActorLocal  = std::make_shared<DuelingDeepQCNNNetworkImpl>(m_StateSize, m_ActionSize);
+            m_ActorTarget = std::make_shared<DuelingDeepQCNNNetworkImpl>(m_StateSize, m_ActionSize);
+        }else{
+            m_ActorLocal  = std::make_shared<DuelingDeepQNetworkImpl>(m_StateSize, m_ActionSize);
+            m_ActorTarget = std::make_shared<DuelingDeepQNetworkImpl>(m_StateSize, m_ActionSize);
+        }
         
-        m_ActorLocal  = DeepQNetwork(m_StateSize, m_ActionSize);
-        m_ActorTarget = DeepQNetwork(m_StateSize, m_ActionSize);
-
         m_Optimizer   = std::move(std::make_unique<torch::optim::Adam>(m_ActorLocal->parameters(), LR_RATE));
 
         m_Noise       = std::make_unique<OUNoise>(m_ActionSize, SEED);
         m_Memory      = std::make_unique<ReplayMemory>(m_ActionSize, BUFFER_SIZE, BATCH_SIZE, m_Device);
-        m_Epsilon     = EPS;        
+        m_Epsilon     = EPS;
+        m_UpdateRate  = AGENT_UPDATE_RATE;
 
         m_ActorLocal->train();
         m_ActorTarget->train();
@@ -77,7 +86,6 @@ public:
     void step(std::unique_ptr<GameState> current_state, std::unique_ptr<GameState> next_state, int action, float reward, bool done){
         m_Memory->add(std::move(current_state), std::move(next_state), action, reward, done);
 
-
         if(m_Memory->capacity() > BATCH_SIZE && m_Step % TRAIN_EVERY == 0){
             GroupTensorExperience experiences = m_Memory->sample();
             this->learn(experiences);
@@ -88,9 +96,11 @@ public:
         }
         
         // Update Epsilon
-        if(m_Step % EXPLORATION_UPDATE == 0 && m_Epsilon > MIN_EPS){
-            m_Epsilon *= EPS_REDUCTION;
-            spdlog::info("Random Exploration Rate Reduction -> New Value : {}", m_Epsilon);
+        if(m_Step % EXPLORATION_UPDATE == 0){
+            if (m_Epsilon > MIN_EPS && m_Step != 0){
+                m_Epsilon *= EPS_REDUCTION;
+            }
+            spdlog::info("Step : {} Random Exploration Rate Reduction -> New Value : {}",m_Step, m_Epsilon);
         }
 
         ++m_Step;
@@ -138,12 +148,13 @@ public:
         }
     }
 
-    uint32_t act(std::unique_ptr<GameState> state){
+    uint32_t act(std::unique_ptr<GameState>& state){
         float random_value = ((float)std::rand() / RAND_MAX);
 
         if(random_value > m_Epsilon){
             torch::Tensor stateTensor = state->toTensor();
             stateTensor = stateTensor.to(m_Device);
+
             m_ActorLocal->eval();
             
             // Lock Gradient Calculations
@@ -157,13 +168,19 @@ public:
             m_ActorLocal->train();
         
             auto action = torch::argmax(action_values).cpu();
+
+            std::cout << "AI Action : " << action << "\n Action Vector : " << action_values << "\n";
+
             return (uint32_t)action.item<int>();
          }
-        
-        return (uint32_t) (std::rand() % m_ActionSize);
+
+        uint32_t action = (uint32_t) (std::rand() % m_ActionSize);
+        std::cout << "Random Action : " << action << "\n";
+        return action;
     }
 
     void softUpdate(){
+        spdlog::info("Updating The Target Network");
         // Update Target Network's parameters slowly
         torch::autograd::GradMode::set_enabled(false);
 
@@ -189,13 +206,13 @@ public:
         return m_Step;
     }
 
-    void printNetwork(const DeepQNetwork network){
+    void printNetwork(const std::shared_ptr<DQNetworkImpl>& network){
         for (const auto& p : network->parameters()) {
             std::cout << p.sizes() << "\n";
         }
     }
 
-    void initWeights(DeepQNetwork& network)
+    void initWeights(std::shared_ptr<DQNetworkImpl>& network)
     {
         torch::autograd::GradMode::set_enabled(false);
         
@@ -222,7 +239,7 @@ public:
         printNetwork(m_ActorTarget);
     }
 
-    void saveNetwork(DeepQNetwork& network, std::string model_path) {
+    void saveNetwork(std::shared_ptr<DQNetworkImpl>& network, std::string model_path) {
         torch::serialize::OutputArchive output_archive;
         network->save(output_archive);
         output_archive.save_to(model_path);
@@ -235,7 +252,7 @@ public:
         saveNetwork(m_ActorTarget, "ActorTarget.pt");
     }
 
-    void loadNetwork(DeepQNetwork& network, std::string model_path){
+    void loadNetwork(std::shared_ptr<DQNetworkImpl>& network, std::string model_path){
         if(boost::filesystem::exists(model_path.c_str())){
             torch::serialize::InputArchive archive;
             archive.load_from(model_path);

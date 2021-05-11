@@ -14,6 +14,7 @@
 #include <cmath>
 
 #define GL_GLEXT_PROTOTYPES
+#define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_OFF
 
 #include <GLFW/glfw3.h>
 #include <GL/glut.h>
@@ -21,6 +22,7 @@
 #include <SOIL/SOIL.h>
 #include <bsd/stdlib.h>
 #include "spdlog/spdlog.h"
+#include "GameState.h"
 
 #include "Sprite.h"
 #include "Player.h"

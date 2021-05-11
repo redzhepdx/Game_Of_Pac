@@ -23,7 +23,7 @@ target_link_libraries(${PROJECT_NAME} ${TORCH_LIBRARIES} GL GLU glut SOIL bsd gl
 file(COPY files DESTINATION ${CMAKE_BINARY_DIR})
 
 if(NOT MSVC)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS} -Wall -fexceptions -fnon-call-exceptions -g -rdynamic")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS} -Wconversion -Wsign-conversion -fcommon -fexceptions -fnon-call-exceptions -g -rdynamic")
 endif()
 
 set(CMAKE_CXX_FLAGS_DEBUG "-pg")

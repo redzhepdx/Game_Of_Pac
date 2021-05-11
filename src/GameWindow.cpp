@@ -12,6 +12,10 @@ GameWindow::GameWindow(bool status, int width, int height): m_Status(status), m_
     // Configurations
     this->m_EnemyConfig = std::make_unique<EnemyConfig>();
 
+    if(m_ObservationType == Image){
+        m_ImageBuffer.set_capacity(IMAGE_OBS_COUNT);
+    }
+
     generate();
 }
 
@@ -248,7 +252,7 @@ void GameWindow::generateExitPoints(){
     exit_tiles.push_back(left_exit_tile);
 
     // Find closest tiles to teleport points
-    for(auto i = 0; i < exit_tiles.size(); ++i){
+    for(size_t i = 0; i < exit_tiles.size(); ++i){
         Vector2<int> tile = exit_tiles[i];
         std::vector<float> distances;
 
@@ -262,7 +266,7 @@ void GameWindow::generateExitPoints(){
     }
 
     // Create a way to teleport starting from closest point
-    for(auto i = 0; i < close_tiles.size(); ++i){
+    for(size_t i = 0; i < close_tiles.size(); ++i){
         int row_difference = exit_tiles[i].x - close_tiles[i].x;
         int col_difference = exit_tiles[i].y - close_tiles[i].y;
         
@@ -294,7 +298,7 @@ void GameWindow::generateExitPoints(){
             if(std::abs(col_difference) > 0){
                 for(auto step = 1; step <= std::abs(col_difference); ++step){
                     (col_difference > 0) ? m_Maze->m_Matrix[close_tiles[i].x][close_tiles[i].y + step] = Empty :
-                                           m_Maze->m_Matrix[close_tiles[i].x][close_tiles[i].y - step]   = Empty;
+                                           m_Maze->m_Matrix[close_tiles[i].x][close_tiles[i].y - step] = Empty;
                 }
             }
         }
@@ -341,7 +345,7 @@ void GameWindow::initPlayer(){
         // Create Player Object
         m_Player = std::make_unique<Player>(m_TextureBufferID, Vector2<float>(randomPosition.y * SQUARE_SIZE,
                                                                         m_Width - randomPosition.x * SQUARE_SIZE),
-                                                                        AI_AGENT);
+                                                                        AI_AGENT, m_ObservationType);
 
         m_Player->setVelocity(Vector2<float>(PLAYER_SPEED, PLAYER_SPEED));
         m_Player->setOffset(OBJECT_OFFSET);
@@ -448,7 +452,7 @@ void GameWindow::spawnEnemies(){
             targetEnemyType = SuicideBomber;
         }
 
-        spdlog::info("Spawned Enemy Type : {}", targetEnemyType);
+        // spdlog::info("Spawned Enemy Type : {}", targetEnemyType);
             
         // Spawn
         std::unique_ptr<Enemy> enemy = std::make_unique<Enemy>(m_TextureEnemyID, 
@@ -686,7 +690,6 @@ void GameWindow::render(GLFWwindow* window){
         tile->render();
     }
 
-
     m_Player->render();
     glfwSwapBuffers(window);
 
@@ -718,12 +721,17 @@ void GameWindow::update(GLFWwindow* window){
         enemyBullet->update(window);
     }
 
-    for(const auto& tile : m_Tiles){
-        tile->update(window);
+    // Image observations
+    if(m_ObservationType == Image){
+        m_ImageBuffer.push_back(getCurrentImageGameState(window));
+        if(m_ImageBuffer.size() >= IMAGE_OBS_COUNT){
+            m_Player->update(window, std::move(this->getCurrentGameState(window)));
+        }
     }
-
-
-    m_Player->update(window, std::move(this->getCurrentGameState()));
+    else{
+        // Internal Observations
+        m_Player->update(window, std::move(this->getCurrentGameState(window)));
+    }
     
     // Random Restart Check!
     if(glfwGetKey(window, GLFW_KEY_U) == GLFW_TRUE){
@@ -788,14 +796,25 @@ void GameWindow::test_path_finding(Vector2<float> target_pos){
         m_Tiles.push_back(std::move(rand_tile));
     }
 
-    std::cout << std::endl;
+    spdlog::critical("Done");
 }
 
-std::unique_ptr<GameState> GameWindow::getCurrentGameState(){
+std::unique_ptr<GameState> GameWindow::getCurrentGameState(GLFWwindow* window){
 
+    if(m_ObservationType == Internal){
+        return getCurrentInternalGameState();
+    }
+    std::vector<BinaryImage> currentStateImages = std::vector<BinaryImage>(m_ImageBuffer.begin(), m_ImageBuffer.end());
+
+    return std::make_unique<GameStateImage>(currentStateImages, m_Width / 8, m_Height / 8, currentStateImages.size());
+}
+
+std::unique_ptr<GameState> GameWindow::getCurrentInternalGameState(){
     std::vector<Vector2<float>> enemy_positions;
     std::vector<Vector2<float>> bullet_positions;
-    std::vector<float> bullet_directions;
+    std::vector<float>          bullet_directions;
+    std::vector<Vector2<float>> normal_tile_positions;
+    std::vector<Vector2<float>> teleport_tile_positions;
 
 
     std::for_each(m_EnemyInstances.begin(), m_EnemyInstances.end(), [&](auto& enemy){
@@ -806,17 +825,50 @@ std::unique_ptr<GameState> GameWindow::getCurrentGameState(){
                                                                         bullet_positions.push_back(bullet->getPosition());
                                                                         bullet_directions.push_back(bullet->getRotation());
                                                                     });
+    std::for_each(m_Tiles.begin(), m_Tiles.end(), [&](auto& tile){
+        TileType type = m_Maze->pos2Tile(tile->getPosition());
+        if(type == Wall){
+            normal_tile_positions.push_back(tile->getPosition());
+        }
+        else if(type == Teleport){
+            normal_tile_positions.push_back(tile->getPosition());
+        }
+    });
 
+    uint16_t remaining_tile_count = 900 - normal_tile_positions.size();
 
+    // Standardize Normal Tile Count in State Description
+    for(uint16_t remaining_tile = 0; remaining_tile < remaining_tile_count ; ++remaining_tile){
+        normal_tile_positions.push_back(Vector2<float>(-1.0, -1.0));
+    }
 
-    std::unique_ptr<GameState> current_state = GameState::createGameState(m_Player->getPosition(), 
-                                                                          m_Player->getRemainingBulletCount(), 
-                                                                          m_Player->getTimeToTeleport(),
-                                                                          m_Player->getHealth(),
-                                                                          m_Maze->m_Matrix, 
-                                                                          enemy_positions,
-                                                                          bullet_positions,
-                                                                          bullet_directions);
+    return std::make_unique<GameStateInternal>(m_Player->getPosition(),
+                                               m_Player->getRotation(), 
+                                               m_Player->getRemainingBulletCount(), 
+                                               m_Player->getTimeToTeleport(),
+                                               m_Player->getHealth(),
+                                               normal_tile_positions,
+                                               teleport_tile_positions,
+                                               enemy_positions,
+                                               bullet_positions,
+                                               bullet_directions);
+}
 
-    return current_state;
+BinaryImage GameWindow::getCurrentImageGameState(GLFWwindow* window){
+    glfwGetFramebufferSize(window, &m_Width, &m_Height);
+    BinaryImage buffer(m_Width * m_Height * 3);
+    glReadPixels(0, 0, m_Width, m_Height, GL_RGB, GL_UNSIGNED_BYTE, buffer.data());
+
+    // Down-scale and convert it to gray
+    // TODO : [SLOW]
+    torch::Tensor outputTensor = torch::tensor(buffer).view({3, m_Width, m_Height}).to(torch::kFloat32).flipud().unsqueeze(0);
+    outputTensor               = interpolate(outputTensor, InterpolateFuncOptions().size(
+                                    std::vector<int64_t>({m_Width / 8, m_Height / 8})).mode(torch::kBilinear)).mean(1);
+
+    // Flatten the tensor and cast it 
+    // TODO : [SLOW]
+    outputTensor = outputTensor.view({m_Width * m_Height / 64}).to(torch::kUInt8);
+    buffer       = std::vector<u_char>(outputTensor.data<uint8_t>(), outputTensor.data<uint8_t>() + outputTensor.numel());
+
+    return buffer;
 }

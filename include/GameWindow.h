@@ -12,7 +12,7 @@ typedef struct
 }QuadTreeNode, *PQuadTreeNode;
 
 typedef struct EnemyConfig{
-    int enemyCount           = ENEMY_COUNT;
+    uint32_t enemyCount      = ENEMY_COUNT;
     int enemySpawnDistance   = MAX_ENEMY_SPAWN_DISTANCE;
     int chaserCount          = ENEMY_COUNT - 3;
     int sniperCount          = 3;
@@ -50,6 +50,9 @@ private:
     // Total number of enemies
     uint m_EnemyCount = ENEMY_COUNT;
     uint m_EnemySpawnDistance = MAX_ENEMY_SPAWN_DISTANCE;
+
+    ObservationType m_ObservationType = GAME_STATE_TYPE;
+    boost::circular_buffer_space_optimized<BinaryImage> m_ImageBuffer;
 
     std::unique_ptr<EnemyConfig> m_EnemyConfig;
 
@@ -117,7 +120,9 @@ private:
 
 private:
     // Environment Functions
-    std::unique_ptr<GameState> getCurrentGameState();
+    std::unique_ptr<GameState> getCurrentGameState(GLFWwindow* window);
+    std::vector<unsigned char> getCurrentImageGameState(GLFWwindow* window);
+    std::unique_ptr<GameState> getCurrentInternalGameState();
 
 public:
     GameWindow(bool status, int width, int height);

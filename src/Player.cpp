@@ -8,15 +8,32 @@ Player::Player(){
 
 Player::Player(uint textureBufferID, Vector2<float> position, PlayerControl controlType):
 							Sprite(textureBufferID, position){
-	this->m_ControlType = controlType;
+	m_ControlType     = controlType;
+	m_ObservationType = Internal;
 
 	m_Actions.resize(ACTION_SIZE);
 
 	if (this->m_ControlType == AI_AGENT){
 		if(torch::cuda::is_available()){
-			m_Agent = std::make_unique<Agent>(STATE_SIZE, ACTION_SIZE, torch::kCUDA);
+			m_Agent = std::make_unique<Agent>(STATE_SIZE, ACTION_SIZE, torch::kCUDA, m_ObservationType);
 		}else{
-			m_Agent = std::make_unique<Agent>(STATE_SIZE, ACTION_SIZE, torch::kCPU);
+			m_Agent = std::make_unique<Agent>(STATE_SIZE, ACTION_SIZE, torch::kCPU,  m_ObservationType);
+		}
+	}
+}
+
+Player::Player(uint textureBufferID, Vector2<float> position, PlayerControl controlType, ObservationType observationType):
+							Sprite(textureBufferID, position){
+	m_ControlType     = controlType;
+	m_ObservationType = observationType;
+
+	m_Actions.resize(ACTION_SIZE);
+
+	if (this->m_ControlType == AI_AGENT){
+		if(torch::cuda::is_available()){
+			m_Agent = std::make_unique<Agent>(STATE_SIZE, ACTION_SIZE, torch::kCUDA, m_ObservationType);
+		}else{
+			m_Agent = std::make_unique<Agent>(STATE_SIZE, ACTION_SIZE, torch::kCPU, m_ObservationType);
 		}
 	}
 }
@@ -103,6 +120,7 @@ std::unique_ptr<Player> Player::Copy(){
 }
 
 void Player::update(GLFWwindow* window, std::unique_ptr<GameState> currentState){
+	// Reset Action Vector
 	std::fill(m_Actions.begin(), m_Actions.end(), false);
 
 	if(this->m_Health <= 0){
@@ -251,7 +269,7 @@ void Player::manualControlPlayer(GLFWwindow* window){
 }
 
 void Player::updateAgent(std::unique_ptr<GameState> currentState){
-	uint32_t action = m_Agent->act(std::move(currentState->copy()));
+	int action = m_Agent->act(currentState);
 
 	// if there is no score gain, punish little. If player gets a hit increase the punishment
 	float    reward = (m_Score - m_PrevScore - ENEMY_DESTROY_POINTS / 5.0f) + (m_Health - m_PrevHealth) / 5.0f;
@@ -259,7 +277,7 @@ void Player::updateAgent(std::unique_ptr<GameState> currentState){
 
 	// There is no observation
 	if(m_PrevAction != -1){
-		m_Agent->step(std::move(m_PrevGameState->copy()), std::move(currentState->copy()), m_PrevAction, m_PrevReward, done);
+		m_Agent->step(std::move(m_PrevGameState), std::move(currentState->copy()), m_PrevAction, m_PrevReward, done);
 	}
 
 	m_PrevGameState = std::move(currentState);
@@ -270,7 +288,7 @@ void Player::updateAgent(std::unique_ptr<GameState> currentState){
 
 
 	if(m_Agent->totalStepCount() % 100 == 0){
-		spdlog::info("Current Player Score : {}", m_PrevScore);
+		spdlog::critical("Current Player Score : {}", m_PrevScore);
 	}
 
 	// Execute a single Action

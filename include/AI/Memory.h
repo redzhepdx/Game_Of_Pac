@@ -13,6 +13,7 @@
 #include <torch/torch.h>
 
 #include "config.h"
+#include "GameState.h"
 
 typedef std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> GroupTensorExperience;
 
@@ -36,9 +37,9 @@ typedef struct Experience{
 
 typedef struct ReplayMemory{
 private:
-    int32_t m_ActionSize;
-    int32_t m_BufferSize;
-    int32_t m_BatchSize;
+    int32_t  m_ActionSize;
+    int32_t  m_BufferSize;
+    uint32_t m_BatchSize;
 
     boost::circular_buffer_space_optimized<Experience> m_Buffer;
 
@@ -53,7 +54,6 @@ public:
 
     void add(std::unique_ptr<GameState> current_state, std::unique_ptr<GameState> next_state, int action, float reward, bool done){
         m_Buffer.push_back(Experience(std::move(current_state), std::move(next_state), action, reward, done));
-        spdlog::debug("Buffer Size : {}", m_Buffer.size());
     }
 
     GroupTensorExperience sample(){
@@ -67,7 +67,6 @@ public:
             random_index_set.insert(generator(random_engine));
         }
         std::vector<int> random_indices(random_index_set.begin(), random_index_set.end());
-        // std::generate(random_indices.begin(), random_indices.end(), [&](){ return generator(random_engine); });
 
         torch::Tensor stacked_current_states = m_Buffer[random_indices[0]].m_CurrentState->toTensor();
         torch::Tensor stacked_next_states    = m_Buffer[random_indices[0]].m_NextState->toTensor();
@@ -77,7 +76,7 @@ public:
         torch::Tensor stacked_dones          = torch::tensor((uint8_t)m_Buffer[random_indices[0]].m_Done).unsqueeze(0);
 
         // Loop the current queue and stack the tensors
-        for(int idx = 1; idx < m_BatchSize; ++idx){
+        for(uint32_t idx = 1; idx < m_BatchSize; ++idx){
 
             stacked_current_states       = torch::cat({stacked_current_states, m_Buffer[random_indices[idx]].m_CurrentState->toTensor()}, 0);
             stacked_next_states          = torch::cat({stacked_next_states,    m_Buffer[random_indices[idx]].m_NextState->toTensor()},    0);
@@ -88,10 +87,10 @@ public:
         }
 
         stacked_current_states = stacked_current_states.to(m_Device);
-        stacked_next_states = stacked_next_states.to(m_Device);
-        stacked_actions = stacked_actions.to(m_Device);
-        stacked_rewards = stacked_rewards.to(m_Device);
-        stacked_dones = stacked_dones.to(m_Device);
+        stacked_next_states    = stacked_next_states.to(m_Device);
+        stacked_actions        = stacked_actions.to(m_Device);
+        stacked_rewards        = stacked_rewards.to(m_Device);
+        stacked_dones          = stacked_dones.to(m_Device);
 
         GroupTensorExperience experiencesTensor = std::make_tuple(stacked_current_states, stacked_next_states, stacked_actions, stacked_rewards, stacked_dones);
 

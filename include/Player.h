@@ -30,11 +30,14 @@ private:
 	std::vector<bool> m_Actions;
 
 	uint m_TeleportTicks = 0;
-	PlayerControl m_ControlType;
+	
+	PlayerControl   m_ControlType;
+	ObservationType m_ObservationType;
+
 	std::unique_ptr<Agent> m_Agent;
 
 	std::unique_ptr<GameState> m_PrevGameState{nullptr};
-	uint32_t m_PrevAction = -1;
+	int      m_PrevAction = -1;
 	float    m_PrevReward = -1;
 	
 
@@ -44,6 +47,7 @@ public:
 public:
 	Player();
 	Player(uint textureBufferID, Vector2<float> position, PlayerControl controlType);
+	Player(uint textureBufferID, Vector2<float> position, PlayerControl controlType, ObservationType observationType);
 	~Player();
 
 public:
