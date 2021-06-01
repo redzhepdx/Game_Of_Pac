@@ -4,11 +4,12 @@
 #pragma once
 
 namespace spdlog {
-class logger;
-class formatter;
+    class logger;
 
-namespace sinks {
-class sink;
-}
+    class formatter;
+
+    namespace sinks {
+        class sink;
+    }
 
 } // namespace spdlog

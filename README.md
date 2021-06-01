@@ -1,45 +1,51 @@
 # Game_Of_Pac
-From Scratch OpenGL Game and ML Agent/Enemy 
+
+From Scratch OpenGL Game and ML Agent/Enemy
 
 # DONEs:
-- Maze Generation with DFS 
-- Shaking 
-- Vibration Effect 
-- Enemy Spawn 
-- Pac-Man Style Maze Exit 
-- Movement Smooting for the pass between two close tiles 
-- Add Edge Connection(Mirror) 
+
+- Maze Generation with DFS
+- Shaking
+- Vibration Effect
+- Enemy Spawn
+- Pac-Man Style Maze Exit
+- Movement Smooting for the pass between two close tiles
+- Add Edge Connection(Mirror)
 - Random Position Generation
-- Connection 
-- Boundaries 
-- Copy Function for the move unique_ptr objects 
-- Rotate Bullets 
-- Collision of Bullets 
-- Reload 
+- Connection
+- Boundaries
+- Copy Function for the move unique_ptr objects
+- Rotate Bullets
+- Collision of Bullets
+- Reload
 - Memory based refactoring : unique_ptr lists
-- A* Player Finding 
+- A* Player Finding
 - Create Enemy Chase Action with A* Algorithm
-- Bullet Collection 
-- Enemy Health 
-- Enemy Bullet Collection 
-- Enemy Respawn 
+- Bullet Collection
+- Enemy Health
+- Enemy Bullet Collection
+- Enemy Respawn
 - Cmake
 - Libtorch
 - AI [Needs Some Tuning]
 
 # PROBLEM
+
 - There is a memory leak that needs to solved!
 
 # IN-PROGRESS's
-- Refactoring : Code Organization 
+
+- Refactoring : Code Organization
 - Check QuadTree for Collision Detection(IF IT IS NECESSARY)
 
 # TODOs:
-- Jumping Areas 
+
+- Jumping Areas
 - Screen Shaking
 - Suicide Bomber
 
 ### Required Libs and Tools
+
 ```Cpp17```
 ```cmake 3.10.0 + ```
 ```Glfw3 3.2.1 +```
@@ -50,6 +56,7 @@ From Scratch OpenGL Game and ML Agent/Enemy
 ```torch 1.7.1(I use pip versioN)```
 
 ### Compile and Run
+
 - Do it only once!
 
 ``` mkdir -p out/build ```
@@ -60,7 +67,7 @@ From Scratch OpenGL Game and ML Agent/Enemy
 
 ``` cmake -S ../../ -B .```
 
-or 
+or
 
 ```chmod +x configure.sh build.sh run.sh```
 

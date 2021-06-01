@@ -10,41 +10,37 @@
 #include <ostream>
 
 namespace spdlog {
-namespace sinks {
-template<typename Mutex>
-class ostream_sink final : public base_sink<Mutex>
-{
-public:
-    explicit ostream_sink(std::ostream &os, bool force_flush = false)
-        : ostream_(os)
-        , force_flush_(force_flush)
-    {}
-    ostream_sink(const ostream_sink &) = delete;
-    ostream_sink &operator=(const ostream_sink &) = delete;
+    namespace sinks {
+        template<typename Mutex>
+        class ostream_sink final : public base_sink<Mutex> {
+        public:
+            explicit ostream_sink(std::ostream &os, bool force_flush = false)
+                    : ostream_(os), force_flush_(force_flush) {}
 
-protected:
-    void sink_it_(const details::log_msg &msg) override
-    {
-        memory_buf_t formatted;
-        base_sink<Mutex>::formatter_->format(msg, formatted);
-        ostream_.write(formatted.data(), static_cast<std::streamsize>(formatted.size()));
-        if (force_flush_)
-        {
-            ostream_.flush();
-        }
-    }
+            ostream_sink(const ostream_sink &) = delete;
 
-    void flush_() override
-    {
-        ostream_.flush();
-    }
+            ostream_sink &operator=(const ostream_sink &) = delete;
 
-    std::ostream &ostream_;
-    bool force_flush_;
-};
+        protected:
+            void sink_it_(const details::log_msg &msg) override {
+                memory_buf_t formatted;
+                base_sink<Mutex>::formatter_->format(msg, formatted);
+                ostream_.write(formatted.data(), static_cast<std::streamsize>(formatted.size()));
+                if (force_flush_) {
+                    ostream_.flush();
+                }
+            }
 
-using ostream_sink_mt = ostream_sink<std::mutex>;
-using ostream_sink_st = ostream_sink<details::null_mutex>;
+            void flush_() override {
+                ostream_.flush();
+            }
 
-} // namespace sinks
+            std::ostream &ostream_;
+            bool force_flush_;
+        };
+
+        using ostream_sink_mt = ostream_sink<std::mutex>;
+        using ostream_sink_st = ostream_sink<details::null_mutex>;
+
+    } // namespace sinks
 } // namespace spdlog

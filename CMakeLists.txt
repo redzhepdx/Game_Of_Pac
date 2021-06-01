@@ -22,15 +22,14 @@ target_link_libraries(${PROJECT_NAME} ${TORCH_LIBRARIES} GL GLU glut SOIL bsd gl
 
 file(COPY files DESTINATION ${CMAKE_BINARY_DIR})
 
-if(NOT MSVC)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS} -Wall -Wno-reorder -fcommon -fexceptions -fnon-call-exceptions -g -rdynamic -fsanitize=address -fno-omit-frame-pointer")
-    # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS} -Wall -Wno-reorder -fcommon -fexceptions -fnon-call-exceptions -g -rdynamic")
-endif()
-
+if (NOT MSVC)
+    # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS} -Wall -Wno-reorder -fcommon -fexceptions -fnon-call-exceptions -g -rdynamic -fsanitize=address -fno-omit-frame-pointer")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS} -Wall -Wno-reorder -fcommon -fexceptions -fnon-call-exceptions -g -rdynamic -pthread")
+endif ()
 set(CMAKE_CXX_FLAGS_DEBUG "-pg")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
-    CXX_STANDARD 17
-    CXX_STANDARD_REQUIRED ON
-)
+        CXX_STANDARD 17
+        CXX_STANDARD_REQUIRED ON
+        )

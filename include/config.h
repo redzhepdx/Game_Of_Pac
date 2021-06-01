@@ -7,21 +7,18 @@
 
 #define BOOST_LOG_DYN_LINK 1
 
-enum Direction
-{
+enum Direction {
     Left,
     Right,
     Up,
     Down
 };
-enum ObservationType
-{
+enum ObservationType {
     Internal,
     Image
 };
 
-typedef struct VertexData
-{
+[[maybe_unused]] typedef struct VertexData {
     GLfloat positionCoordinates[3];
     GLfloat textureCoordinates[2];
 } VertexData, *PVertexData;
@@ -42,17 +39,17 @@ constexpr int32_t PLAYER_TP_TICKS = 300;
 constexpr bool REGENERATE_MAP = false;
 
 // Game logging settings
-constexpr bool RUNNING = true;
-constexpr bool STOPPED = false;
+[[maybe_unused]] constexpr bool RUNNING = true;
+[[maybe_unused]] constexpr bool STOPPED = false;
 constexpr bool DEBUG_LOG = true;
 constexpr bool INFO_LOG = false;
 
 // Tile Settings
-constexpr GLfloat MOVE_SIZE = 5.0f;
+[[maybe_unused]] constexpr GLfloat MOVE_SIZE = 5.0f;
 constexpr GLfloat SQUARE_SIZE = 20.0f;
 constexpr float MAX_ENEMY_SPAWN_DISTANCE = 160.0f;
 constexpr float MIN_ENEMY_SPAWN_DISTANCE = 160.0f;
-constexpr float SPAWN_DIST_REDUCTION = 0.9f;
+[[maybe_unused]] constexpr float SPAWN_DIST_REDUCTION = 0.9f;
 constexpr float MAP_TILE_PERCENTAGE = 0.55;
 
 // Object Velocity and Size Settings
@@ -75,7 +72,7 @@ constexpr int16_t SAVE_EVERY = 1000;
 constexpr int32_t SEED = 1337;
 constexpr int32_t STATE_SIZE = 1886; //4 for Image
 constexpr int32_t ACTION_SIZE = 8;
-constexpr int32_t EXPLORATION_UPDATE = 10000;
+[[maybe_unused]] constexpr int32_t EXPLORATION_UPDATE = 10000;
 constexpr int32_t BUFFER_SIZE = 10000;
 constexpr int32_t BATCH_SIZE = 512;
 constexpr int32_t SAMPLING_ITERATION = 2;
@@ -98,13 +95,12 @@ constexpr int32_t HEALTH_LOSS_AFTER_HIT = 10;
 
 // Texture Settings
 constexpr VertexData VERTICES[4] = {
-    {{0.0f, 0.0f, 0.0f}, {0.0f, 1.0f}},
-    {{SQUARE_SIZE, 0.0f, 0.0f}, {1.0f, 1.0f}},
-    {{SQUARE_SIZE, SQUARE_SIZE, 0.0f}, {1.0f, 0.0f}},
-    {{0.0f, SQUARE_SIZE, 0.0f}, {0.0f, 0.0f}}};
+        {{0.0f,        0.0f,        0.0f}, {0.0f, 1.0f}},
+        {{SQUARE_SIZE, 0.0f,        0.0f}, {1.0f, 1.0f}},
+        {{SQUARE_SIZE, SQUARE_SIZE, 0.0f}, {1.0f, 0.0f}},
+        {{0.0f,        SQUARE_SIZE, 0.0f}, {0.0f, 0.0f}}};
 
-enum TileType
-{
+enum TileType {
     Empty,
     Wall,
     Obstacle,

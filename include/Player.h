@@ -12,83 +12,92 @@
 #include "Sprite.h"
 #include "AI/Agent.h"
 
-enum PlayerControl
-{
-	MANUAL,
-	AI_AGENT
+enum PlayerControl {
+    MANUAL,
+    AI_AGENT
 };
 
-class Player : public Sprite
-{
+class Player : public Sprite {
 
 private:
-	int32_t m_Health;
-	int32_t m_PrevHealth = INITIAL_PLAYER_HEALTH;
+    int32_t m_Health{};
+    int32_t m_PrevHealth = INITIAL_PLAYER_HEALTH;
 
-	int32_t m_Score = 0;
-	int32_t m_PrevScore = 0;
+    int32_t m_Score = 0;
+    int32_t m_PrevScore = 0;
 
-	bool m_FireOrder = false;
+    bool m_FireOrder = false;
 
-	std::vector<bool> m_Actions;
+    std::vector<bool> m_Actions;
 
-	uint32_t m_TeleportTicks = 0;
+    uint32_t m_TeleportTicks = 0;
 
-	PlayerControl m_ControlType;
-	ObservationType m_ObservationType;
+    PlayerControl m_ControlType;
+    ObservationType m_ObservationType;
 
-	// AI Control Unit
-	int32_t m_PrevAction = -1;
-	float m_PrevReward = -1;
-	std::unique_ptr<Agent> m_Agent;
-	std::unique_ptr<GameState> m_PrevGameState{nullptr};
+    // AI Control Unit
+    int32_t m_PrevAction = -1;
+    float m_PrevReward = -1;
+    std::unique_ptr<Agent> m_Agent;
+    std::unique_ptr<GameState> m_PrevGameState{nullptr};
 
-	// Statistics
-	boost::circular_buffer_space_optimized<int> m_RecentScoreHistory;
-
-public:
-	uint32_t m_BulletCount = INITIAL_PLAYER_BULLETS;
+    // Statistics
+    boost::circular_buffer_space_optimized<int> m_RecentScoreHistory;
 
 public:
-	Player();
-	Player(uint32_t textureBufferID, Vector2<float> position, PlayerControl controlType);
-	Player(uint32_t textureBufferID, Vector2<float> position, PlayerControl controlType, ObservationType observationType);
-	virtual ~Player() = default;
+    uint32_t m_BulletCount = INITIAL_PLAYER_BULLETS;
 
 public:
-	void setHealth(int32_t new_health);
-	void setArea(std::unique_ptr<Area> area);
-	void setTextureBufferID(uint32_t textureBufferID);
-	void setFireStatus(bool status);
-	void setScore(int32_t score);
-	void addScore(int32_t points);
+    Player();
 
-	int32_t getHealth();
-	int32_t getScore();
+    Player(uint32_t textureBufferID, const Vector2<float>& position, PlayerControl controlType);
 
-	uint32_t getRemainingBulletCount();
-	uint32_t getTimeToTeleport();
+    Player(uint32_t textureBufferID, const Vector2<float>& position, PlayerControl controlType,
+           ObservationType observationType);
 
-	bool getFireStatus();
+    virtual ~Player() = default;
 
-	void reset();
+public:
+    void setHealth(int32_t new_health);
 
-	Vector2<float> getPosition();
+    void setArea(std::unique_ptr<Area> area) override;
 
-	std::unique_ptr<Player> Copy();
+    void setTextureBufferID(uint32_t textureBufferID) override;
 
-	uint32_t TextureBufferID();
+    void setFireStatus(bool status);
 
-	void update(GLFWwindow *window, std::unique_ptr<GameState> currentState);
+    void setScore(int32_t score);
 
-	// This is for ai but it will play a role in the future
-	void updateAgent(std::unique_ptr<GameState> currentState);
+    void addScore(int32_t points);
 
-	void manualControlPlayer(GLFWwindow *window);
+    [[nodiscard]] int32_t getHealth() const;
 
-	void executeActions();
+    [[nodiscard]] int32_t getScore() const;
 
-	void showStatistics();
+    [[nodiscard]] uint32_t getRemainingBulletCount() const;
+
+    [[nodiscard]] uint32_t getTimeToTeleport() const;
+
+    [[nodiscard]] bool getFireStatus() const;
+
+    void reset();
+
+    Vector2<float> getPosition() override;
+
+    std::unique_ptr<Sprite> Copy() override;
+
+    uint32_t TextureBufferID();
+
+    void update(GLFWwindow *window, std::unique_ptr<GameState> currentState);
+
+    // This is for ai but it will play a role in the future
+    void updateAgent(std::unique_ptr<GameState> currentState);
+
+    void manualControlPlayer(GLFWwindow *window);
+
+    void executeActions();
+
+    void showStatistics();
 };
 
 #endif

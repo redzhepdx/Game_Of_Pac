@@ -1,30 +1,32 @@
 #ifndef __AREA__
 #define __AREA__
-#include <stdio.h>
+
+#include <cstdio>
 #include <iostream>
-#include <stdlib.h>
+#include <cstdlib>
 #include <memory>
 
-typedef struct Bbox
-{
+typedef struct Bbox {
 public:
-	float bottom;
-	float top;
-	float left;
-	float right;
+    float bottom;
+    float top;
+    float left;
+    float right;
 } Bbox, *pBox;
 
-class Area
-{
+class Area {
 
 public:
-	std::unique_ptr<Bbox> m_Box;
+    std::unique_ptr<Bbox> m_Box;
 
 public:
-	Area();
-	Area(float bottom, float top, float left, float right);
-	~Area();
-	std::unique_ptr<Area> Copy();
+    Area();
+
+    Area(float bottom, float top, float left, float right);
+
+    ~Area() = default;
+
+    [[nodiscard]] std::unique_ptr<Area> Copy() const;
 };
 
 #endif

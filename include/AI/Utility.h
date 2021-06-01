@@ -8,8 +8,7 @@
 
 #include <torch/torch.h>
 
-typedef struct OUNoise
-{
+typedef struct OUNoise {
 private:
     uint32_t m_Size;
     uint32_t m_Seed;
@@ -22,25 +21,22 @@ private:
 
 public:
     // Ornstein-Uhlenbeck process
-    OUNoise(uint32_t size, uint32_t seed) : m_Size(size), m_Seed(seed)
-    {
+    OUNoise(uint32_t size, uint32_t seed) : m_Size(size), m_Seed(seed) {
         m_State = torch::full({m_Size}, m_Mu);
         m_InitialState = m_State;
     }
 
-    OUNoise(uint32_t size, uint32_t seed, float mu, float theta, float sigma) : m_Size(size), m_Seed(seed), m_Mu(mu), m_Theta(theta), m_Sigma(sigma)
-    {
+    OUNoise(uint32_t size, uint32_t seed, float mu, float theta, float sigma) : m_Size(size), m_Seed(seed), m_Mu(mu),
+                                                                                m_Theta(theta), m_Sigma(sigma) {
         m_State = torch::full({m_Size}, m_Mu);
         m_InitialState = m_State;
     }
 
-    void reset()
-    {
+    void reset() {
         m_State = m_InitialState;
     }
 
-    torch::Tensor sample()
-    {
+    torch::Tensor sample() {
         auto x = m_State;
         auto dx = m_Theta * (m_InitialState - x) + m_Sigma * torch::rand({m_Size});
 
@@ -51,4 +47,4 @@ public:
 
 } OUNoise, *P_OUNoise;
 
-#endif // _AI_UTILITY
+#endif // _AI_UTILITY_

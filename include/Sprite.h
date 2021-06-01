@@ -10,8 +10,7 @@
 #include "config.h"
 #include "point.h"
 
-class Sprite
-{
+class Sprite {
 public:
     float m_RotationSpeed = 10.0;
 
@@ -29,34 +28,42 @@ protected:
 
 public:
     Sprite();
+
     Sprite(uint32_t textureBufferID, Vector2<float> position);
 
-    void setArea(std::unique_ptr<Area> area);
+    virtual void setArea(std::unique_ptr<Area> area);
 
     void setOffset(float offset);
 
     void setMaze(std::unique_ptr<Maze> maze);
 
     void setRotation(float rotation);
+
     float getRotation();
 
-    void setTextureBufferID(uint32_t textureBufferID);
+    virtual void setTextureBufferID(uint32_t textureBufferID);
+
     uint32_t getTextureBufferID();
 
     void setPosition(Vector2<float> newPosition);
-    Vector2<float> getPosition();
+
+    virtual Vector2<float> getPosition();
 
     void setVelocity(Vector2<float> newVelocity);
+
     Vector2<float> getVelocity();
 
-    std::unique_ptr<Sprite> Copy();
+    virtual std::unique_ptr<Sprite> Copy();
 
     bool checkDirectionCollision(Direction dir);
+
     bool checkFullCollision(Vector2<float> speed);
 
     void render();
+
     virtual void update(GLFWwindow *window);
-    virtual void update(Vector2<float> playerPos, std::vector<std::vector<std::shared_ptr<Point>>> grid) {}
+
+    virtual void update(const Vector2<float> &playerPos, const std::vector<std::vector<std::shared_ptr<Point>>> &grid) {}
 };
 
 #endif

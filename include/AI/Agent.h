@@ -8,7 +8,9 @@
 #include <ctime>
 
 #define BOOST_NO_CXX11_SCOPED_ENUMS
+
 #include <boost/filesystem.hpp>
+
 #undef BOOST_NO_CXX11_SCOPED_ENUMS
 
 #include "config.h"
@@ -20,8 +22,7 @@
 
 #include "spdlog/spdlog.h"
 
-class Agent
-{
+class Agent {
 
 private:
     int32_t m_StateSize = 100;
@@ -45,34 +46,29 @@ private:
     torch::Device m_Device = torch::kCPU;
 
 private:
-    void updateLearningRate(float new_lr_rate)
-    {
-        static_cast<torch::optim::AdamOptions &>(m_Optimizer->param_groups()[0].options()).lr(new_lr_rate);
+    void updateLearningRate(float new_lr_rate) {
+        dynamic_cast<torch::optim::AdamOptions &>(m_Optimizer->param_groups()[0].options()).lr(new_lr_rate);
     }
 
-    void updateOptimizerParameters(const std::vector<torch::Tensor> network_parameters)
-    {
-        m_Optimizer = std::move(std::make_unique<torch::optim::Adam>(network_parameters, LR_RATE));
+    void updateOptimizerParameters(const std::vector<torch::Tensor>& network_parameters) {
+        m_Optimizer = std::make_unique<torch::optim::Adam>(network_parameters, LR_RATE);
     }
 
 public:
     Agent(int32_t state_size, int32_t action_size, torch::Device device, ObservationType observation_type)
-        : m_StateSize(state_size), m_ActionSize(action_size), m_Device(device), m_ObservationType(observation_type)
-    {
+            : m_StateSize(state_size), m_ActionSize(action_size), m_Device(device),
+              m_ObservationType(observation_type) {
 
         at::globalContext().setBenchmarkCuDNN(true);
-        if (m_ObservationType == Image)
-        {
+        if (m_ObservationType == Image) {
             m_ActorLocal = std::make_shared<DuelingDeepQCNNNetworkImpl>(m_StateSize, m_ActionSize);
             m_ActorTarget = std::make_shared<DuelingDeepQCNNNetworkImpl>(m_StateSize, m_ActionSize);
-        }
-        else
-        {
+        } else {
             m_ActorLocal = std::make_shared<DuelingDeepQNetworkImpl>(m_StateSize, m_ActionSize);
             m_ActorTarget = std::make_shared<DuelingDeepQNetworkImpl>(m_StateSize, m_ActionSize);
         }
 
-        m_Optimizer = std::move(std::make_unique<torch::optim::Adam>(m_ActorLocal->parameters(), LR_RATE));
+        m_Optimizer = std::make_unique<torch::optim::Adam>(m_ActorLocal->parameters(), LR_RATE);
 
         m_Noise = std::make_unique<OUNoise>(m_ActionSize, SEED);
         m_Memory = std::make_unique<ReplayMemory>(m_ActionSize, BUFFER_SIZE, BATCH_SIZE, m_Device);
@@ -90,29 +86,25 @@ public:
         this->loadNetworks();
     }
 
-    void step(std::unique_ptr<GameState> current_state, std::unique_ptr<GameState> next_state, int action, float reward, bool done)
-    {
+    void step(std::unique_ptr<GameState> current_state, std::unique_ptr<GameState> next_state, int action, float reward,
+              bool done) {
         m_Memory->add(std::move(current_state), std::move(next_state), action, reward, done);
 
-        if (m_Memory->capacity() > BATCH_SIZE && m_Step % TRAIN_EVERY == 0)
-        {
-            for (uint32_t sampling_iter = 0; sampling_iter < SAMPLING_ITERATION; ++sampling_iter)
-            {
+        if (m_Memory->capacity() > BATCH_SIZE && m_Step % TRAIN_EVERY == 0) {
+            for (uint32_t sampling_iter = 0; sampling_iter < SAMPLING_ITERATION; ++sampling_iter) {
                 GroupTensorExperience experiences = m_Memory->sample();
                 this->learn(experiences);
             }
         }
 
-        if (m_Step % SAVE_EVERY == 0 && m_Step > 0)
-        {
+        if (m_Step % SAVE_EVERY == 0 && m_Step > 0) {
             this->saveNetworks();
         }
 
         ++m_Step;
     }
 
-    void learn(GroupTensorExperience experiences)
-    {
+    void learn(const GroupTensorExperience& experiences) {
         // Double Q Learning
 
         torch::Tensor current_states;
@@ -149,18 +141,15 @@ public:
 
         spdlog::debug("Loss : {}", loss.item<double>());
 
-        if (m_Step % AGENT_UPDATE_RATE == 0)
-        {
+        if (m_Step % AGENT_UPDATE_RATE == 0) {
             this->softUpdate();
         }
     }
 
-    uint32_t act(std::unique_ptr<GameState> &state)
-    {
-        float random_value = ((float)std::rand() / RAND_MAX);
+    uint32_t act(std::unique_ptr<GameState> &state) {
+        float random_value = ((float) std::rand() / RAND_MAX);
 
-        if (random_value > m_Epsilon)
-        {
+        if (random_value > m_Epsilon) {
             torch::Tensor stateTensor = state->toTensor();
             stateTensor = stateTensor.to(m_Device);
 
@@ -180,16 +169,15 @@ public:
 
             // std::cout << "AI Action : " << action << "\n Action Vector : " << action_values << "\n";
 
-            return (uint32_t)action.item<int>();
+            return (uint32_t) action.item<int>();
         }
 
-        uint32_t action = (uint32_t)(std::rand() % m_ActionSize);
+        uint32_t action = (uint32_t) (std::rand() % m_ActionSize);
         // std::cout << "Random Action : " << action << "\n";
         return action;
     }
 
-    void softUpdate()
-    {
+    void softUpdate() {
         spdlog::debug("Updating The Target Network");
         // Update Target Network's parameters slowly
         torch::autograd::GradMode::set_enabled(false);
@@ -197,19 +185,14 @@ public:
         auto target_params = m_ActorTarget->named_parameters(); // implement this
         auto params = m_ActorLocal->named_parameters(true /*recurse*/);
         auto buffers = m_ActorLocal->named_buffers(true /*recurse*/);
-        for (auto &val : params)
-        {
+        for (auto &val : params) {
             auto name = val.key();
             auto *t = target_params.find(name);
-            if (t != nullptr)
-            {
+            if (t != nullptr) {
                 t->copy_(val.value() * TAU + (1 - TAU) * t->data());
-            }
-            else
-            {
+            } else {
                 t = buffers.find(name);
-                if (t != nullptr)
-                {
+                if (t != nullptr) {
                     t->copy_(val.value() * TAU + (1 - TAU) * t->data());
                 }
             }
@@ -217,8 +200,7 @@ public:
         torch::autograd::GradMode::set_enabled(true);
     }
 
-    void updateEpsilon()
-    {
+    void updateEpsilon() {
         m_Epsilon = std::max(MIN_EPS, m_Epsilon * EPS_REDUCTION);
 
         spdlog::info("Step : {} Random Exploration Rate Reduction -> New Value : {}", m_Step, m_Epsilon);
@@ -235,34 +217,26 @@ public:
         // }
     }
 
-    uint16_t totalStepCount()
-    {
+    [[nodiscard]] uint16_t totalStepCount() const {
         return m_Step;
     }
 
-    void printNetwork(const std::shared_ptr<DQNetworkImpl> &network)
-    {
-        for (const auto &p : network->parameters())
-        {
+    static void printNetwork(const std::shared_ptr<DQNetworkImpl> &network) {
+        for (const auto &p : network->parameters()) {
             std::cout << p.sizes() << "\n";
         }
     }
 
-    void initWeights(std::shared_ptr<DQNetworkImpl> &network)
-    {
+    static void initWeights(std::shared_ptr<DQNetworkImpl> &network) {
         torch::autograd::GradMode::set_enabled(false);
 
-        for (auto &parameter : network->named_parameters(true))
-        {
+        for (auto &parameter : network->named_parameters(true)) {
             auto param_name = parameter.key();
             auto param = parameter.value();
 
-            if (param_name.compare(2, 6, "weight") == 0)
-            {
+            if (param_name.compare(2, 6, "weight") == 0) {
                 torch::nn::init::xavier_uniform_(param);
-            }
-            else if (param_name.compare(2, 4, "bias") == 0)
-            {
+            } else if (param_name.compare(2, 4, "bias") == 0) {
                 torch::nn::init::constant_(param, 0.01);
             }
         }
@@ -270,48 +244,40 @@ public:
         torch::autograd::GradMode::set_enabled(true);
     }
 
-    void printNetworks()
-    {
+    void printNetworks() {
         spdlog::info("-----------------------Actor Local-------------------");
         printNetwork(m_ActorLocal);
         spdlog::info("-----------------------Actor Target------------------");
         printNetwork(m_ActorTarget);
     }
 
-    void saveNetwork(std::shared_ptr<DQNetworkImpl> &network, std::string model_path)
-    {
+    static void saveNetwork(std::shared_ptr<DQNetworkImpl> &network, const std::string& model_path) {
         torch::serialize::OutputArchive output_archive;
         network->save(output_archive);
         output_archive.save_to(model_path);
     }
 
-    void saveNetworks()
-    {
+    void saveNetworks() {
         spdlog::info("Saving Networks");
 
         saveNetwork(m_ActorLocal, "ActorLocal.pt");
         saveNetwork(m_ActorTarget, "ActorTarget.pt");
     }
 
-    void loadNetwork(std::shared_ptr<DQNetworkImpl> &network, std::string model_path)
-    {
-        if (boost::filesystem::exists(model_path.c_str()))
-        {
+    void loadNetwork(std::shared_ptr<DQNetworkImpl> &network, const std::string& model_path) {
+        if (boost::filesystem::exists(model_path.c_str())) {
             torch::serialize::InputArchive archive;
             archive.load_from(model_path);
             network->load(archive);
             m_Epsilon = MIN_EPS;
-        }
-        else
-        {
+        } else {
             spdlog::info("There is no {} named file!", model_path);
             spdlog::info("Random Weight Initialization");
             initWeights(network);
         }
     }
 
-    void loadNetworks()
-    {
+    void loadNetworks() {
         spdlog::info("Loading Pretrained Networks");
 
         loadNetwork(m_ActorLocal, "ActorLocal.pt");

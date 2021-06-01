@@ -8,40 +8,47 @@
 
 #include "Sprite.h"
 
-enum BulletType
-{
+enum BulletType {
     PlayerBullet,
     EnemyBullet,
     AIBullet
 };
 
-class Projectile : public Sprite
-{
+class Projectile : public Sprite {
 private:
-    int32_t m_Health;
+    int32_t m_Health{};
 
-    BulletType m_Type;
+    BulletType m_Type{PlayerBullet};
 
 public:
-    Projectile();
-    Projectile(uint32_t textureBufferID, Vector2<float> position);
-    Projectile(uint32_t textureBufferID, Vector2<float> position, BulletType type);
-    ~Projectile();
+    Projectile() = default;
+
+    Projectile(uint32_t textureBufferID, const Vector2<float> &position);
+
+    Projectile(uint32_t textureBufferID, const Vector2<float> &position, BulletType type);
+
+    ~Projectile() = default;
 
 public:
     uint32_t TextureBufferID();
-    void update(GLFWwindow *window);
 
-    Vector2<float> getPosition();
-    int32_t getHealth();
+    void update(GLFWwindow *window) override;
+
+    Vector2<float> getPosition() override;
+
+    [[nodiscard]] int32_t getHealth() const;
+
     BulletType getType();
 
     void setHealth(int32_t new_health);
-    void setTextureBufferID(uint32_t textureBufferID);
-    void setArea(std::unique_ptr<Area> area);
+
+    void setTextureBufferID(uint32_t textureBufferID) override;
+
+    void setArea(std::unique_ptr<Area> area) override;
+
     void setType(BulletType targetType);
 
-    std::unique_ptr<Projectile> Copy();
+    std::unique_ptr<Sprite> Copy() override;
 };
 
 #endif

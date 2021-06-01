@@ -1,5 +1,5 @@
 {
-    "recommendations": [
-        "notskm.clang-tidy"
-    ]
+  "recommendations": [
+    "notskm.clang-tidy"
+  ]
 }

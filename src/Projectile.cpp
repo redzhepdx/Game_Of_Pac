@@ -1,78 +1,61 @@
 #include "Projectile.h"
 
-Projectile::Projectile()
-{
+
+Projectile::Projectile(uint32_t textureBufferID, const Vector2<float>& position) : Sprite(textureBufferID, position) {
+    m_Type = PlayerBullet;
 }
 
-Projectile::Projectile(uint32_t textureBufferID, Vector2<float> position) : Sprite(textureBufferID, position)
-{
-	m_Type = PlayerBullet;
+Projectile::Projectile(uint32_t textureBufferID, const Vector2<float>& position, BulletType type) : Sprite(textureBufferID,
+                                                                                                    position) {
+    m_Type = type;
 }
 
-Projectile::Projectile(uint32_t textureBufferID, Vector2<float> position, BulletType type) : Sprite(textureBufferID, position)
-{
-	m_Type = type;
+
+void Projectile::setArea(std::unique_ptr<Area> area) {
+    m_Area = std::move(area);
 }
 
-Projectile::~Projectile()
-{
+Vector2<float> Projectile::getPosition() {
+    return m_Position;
 }
 
-void Projectile::setArea(std::unique_ptr<Area> area)
-{
-	m_Area = std::move(area);
+void Projectile::setHealth(int32_t new_health) {
+    m_Health = new_health;
 }
 
-Vector2<float> Projectile::getPosition()
-{
-	return m_Position;
+int32_t Projectile::getHealth() const {
+    return m_Health;
 }
 
-void Projectile::setHealth(int32_t new_health)
-{
-	m_Health = new_health;
+void Projectile::setTextureBufferID(uint32_t textureBufferID) {
+    Sprite::setTextureBufferID(textureBufferID);
 }
 
-int32_t Projectile::getHealth()
-{
-	return m_Health;
+uint32_t Projectile::TextureBufferID() {
+    return Sprite::getTextureBufferID();
 }
 
-void Projectile::setTextureBufferID(uint32_t textureBufferID)
-{
-	Sprite::setTextureBufferID(textureBufferID);
+BulletType Projectile::getType() {
+    return m_Type;
 }
 
-uint32_t Projectile::TextureBufferID()
-{
-	return Sprite::getTextureBufferID();
+void Projectile::setType(BulletType targetType) {
+    m_Type = targetType;
 }
 
-BulletType Projectile::getType()
-{
-	return m_Type;
+std::unique_ptr<Sprite> Projectile::Copy() {
+    std::unique_ptr<Projectile> copy = std::make_unique<Projectile>();
+    copy->setTextureBufferID(Sprite::getTextureBufferID());
+
+    copy->m_Position = m_Position;
+    copy->m_Velocity = m_Velocity;
+    copy->m_Type = m_Type;
+
+    copy->setRotation(Sprite::getRotation());
+    copy->setArea(m_Area->Copy());
+    return copy;
 }
 
-void Projectile::setType(BulletType targetType)
-{
-	m_Type = targetType;
-}
-
-std::unique_ptr<Projectile> Projectile::Copy()
-{
-	std::unique_ptr<Projectile> copy = std::make_unique<Projectile>();
-	copy->setTextureBufferID(Sprite::getTextureBufferID());
-
-	copy->m_Position = m_Position;
-	copy->m_Velocity = m_Velocity;
-	copy->m_Type = m_Type;
-
-	copy->setRotation(Sprite::getRotation());
-	copy->setArea(m_Area->Copy());
-	return copy;
-}
-
-void Projectile::update(GLFWwindow *window)
-{
-	Sprite::update(window);
+void Projectile::update(GLFWwindow *window) {
+    Sprite::update(window);
 }
