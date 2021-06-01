@@ -32,8 +32,8 @@ private:
 
     uint32_t m_TeleportTicks = 0;
 
-    PlayerControl m_ControlType;
-    ObservationType m_ObservationType;
+    PlayerControl m_ControlType{AI_AGENT};
+    ObservationType m_ObservationType{Internal};
 
     // AI Control Unit
     int32_t m_PrevAction = -1;
@@ -50,9 +50,9 @@ public:
 public:
     Player();
 
-    Player(uint32_t textureBufferID, const Vector2<float>& position, PlayerControl controlType);
+    Player(uint32_t textureBufferID, const Vector2<float> &position, PlayerControl controlType);
 
-    Player(uint32_t textureBufferID, const Vector2<float>& position, PlayerControl controlType,
+    Player(uint32_t textureBufferID, const Vector2<float> &position, PlayerControl controlType,
            ObservationType observationType);
 
     virtual ~Player() = default;

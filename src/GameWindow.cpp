@@ -329,22 +329,14 @@ void GameWindow::generateExitPoints() {
     m_Maze->m_Matrix[right_exit_tile.x][right_exit_tile.y - 1] = Empty;
     m_Maze->m_Matrix[right_exit_tile.x][right_exit_tile.y - 2] = Empty;
 
-    std::cout << "Debug II\n";
-    /*Setup Exit Points*/
+    /* Setup Exit Points */
     m_Maze->m_Matrix[up_exit_tile.x][up_exit_tile.y] = Teleport;
-    std::cout << "Debug II-1\n";
     m_Maze->m_Matrix[up_exit_tile.x - 1][up_exit_tile.y] = Teleport;
-    std::cout << "Debug II-2\n";
-    std::cout << down_exit_tile.x << " " << down_exit_tile.y << "\n";
     m_Maze->m_Matrix[down_exit_tile.x][down_exit_tile.y] = Teleport;
-    std::cout << "Debug II-3\n";
     m_Maze->m_Matrix[left_exit_tile.x][left_exit_tile.y] = Teleport;
-    std::cout << "Debug II-4\n";
     m_Maze->m_Matrix[right_exit_tile.x][right_exit_tile.y] = Teleport;
-    std::cout << "Debug II-5\n";
     m_Maze->m_Matrix[right_exit_tile.x][right_exit_tile.y + 1] = Teleport;
 
-    std::cout << "Debug III\n";
     // Last
     for (int32_t row = 0; row < static_cast<int32_t>((float) m_Height / SQUARE_SIZE) + 1; ++row) {
         for (int32_t col = 0; col < static_cast<int32_t>((float) m_Width / SQUARE_SIZE) + 1; ++col) {

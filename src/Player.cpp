@@ -177,7 +177,7 @@ void Player::executeActions() {
                 m_Position += direction;
             } else if (m_Maze->pos2Tile(Vector2<float>(m_Position.x, m_Area->m_Box->bottom)) == Teleport &&
                        m_TeleportTicks == 0) {
-                m_Position.y = m_Area->m_Box->bottom + (SQUARE_SIZE * 0.75);
+                m_Position.y = m_Area->m_Box->bottom + (float)(SQUARE_SIZE * 0.75);
                 m_Position.x = (float) (m_Position.x / SQUARE_SIZE) * SQUARE_SIZE;
 
                 m_TeleportTicks = PLAYER_TP_TICKS;
@@ -193,7 +193,7 @@ void Player::executeActions() {
                 m_Position -= direction;
             } else if (m_Maze->pos2Tile(Vector2<float>(m_Position.x, m_Area->m_Box->top)) == Teleport &&
                        m_TeleportTicks == 0) {
-                m_Position.y = m_Area->m_Box->top - (SQUARE_SIZE * 0.75);
+                m_Position.y = m_Area->m_Box->top - (float)(SQUARE_SIZE * 0.75);
                 m_Position.x = (float) (m_Position.x / SQUARE_SIZE) * SQUARE_SIZE;
 
                 m_TeleportTicks = PLAYER_TP_TICKS;
@@ -209,7 +209,7 @@ void Player::executeActions() {
                 m_Position -= direction;
             } else if (m_Maze->pos2Tile(Vector2<float>(m_Area->m_Box->right, m_Position.y)) == Teleport &&
                        m_TeleportTicks == 0) {
-                m_Position.x = m_Area->m_Box->right - (SQUARE_SIZE * 0.75);
+                m_Position.x = m_Area->m_Box->right - (float)(SQUARE_SIZE * 0.75);
                 m_Position.y = (float) (m_Position.y / SQUARE_SIZE) * SQUARE_SIZE;
 
                 m_TeleportTicks = PLAYER_TP_TICKS;
@@ -217,7 +217,7 @@ void Player::executeActions() {
         }
     }
 
-    //Rotataion
+    //Rotation
     if (m_Actions[4]) {
         m_RotationAngle = (float) ((int) (m_RotationAngle - m_Velocity.x) % 360);
     }
@@ -253,7 +253,7 @@ void Player::manualControlPlayer(GLFWwindow *window) {
         m_Actions[3] = true;
     }
 
-    //Rotataion
+    //Rotation
     if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
         m_Actions[4] = true;
     }
