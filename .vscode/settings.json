@@ -67,5 +67,6 @@
         "map": "cpp",
         "filesystem": "cpp",
         "codecvt": "cpp"
-    }
+    },
+    "editor.formatOnSave": true
 }

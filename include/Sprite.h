@@ -10,12 +10,13 @@
 #include "config.h"
 #include "point.h"
 
-class Sprite{
+class Sprite
+{
 public:
     float m_RotationSpeed = 10.0;
 
 private:
-    uint m_TextureBufferID;
+    uint32_t m_TextureBufferID;
 
 protected:
     std::unique_ptr<Area> m_Area;
@@ -28,7 +29,7 @@ protected:
 
 public:
     Sprite();
-    Sprite(uint textureBufferID, Vector2<float> position);
+    Sprite(uint32_t textureBufferID, Vector2<float> position);
 
     void setArea(std::unique_ptr<Area> area);
 
@@ -39,8 +40,8 @@ public:
     void setRotation(float rotation);
     float getRotation();
 
-    void setTextureBufferID(uint textureBufferID);
-    uint getTextureBufferID();
+    void setTextureBufferID(uint32_t textureBufferID);
+    uint32_t getTextureBufferID();
 
     void setPosition(Vector2<float> newPosition);
     Vector2<float> getPosition();
@@ -54,11 +55,8 @@ public:
     bool checkFullCollision(Vector2<float> speed);
 
     void render();
-    virtual void update(GLFWwindow* window);
-    virtual void update(Vector2<float> playerPos, std::vector<std::vector<std::shared_ptr<Point>>> grid){
-        
-    }
-
+    virtual void update(GLFWwindow *window);
+    virtual void update(Vector2<float> playerPos, std::vector<std::vector<std::shared_ptr<Point>>> grid) {}
 };
 
 #endif

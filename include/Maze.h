@@ -10,16 +10,17 @@
 #include "Vector2.h"
 #include "config.h"
 
-class Maze{
+class Maze
+{
 public:
-	int m_Width;
-	int m_Height;
+	int32_t m_Width;
+	int32_t m_Height;
 	std::vector<std::vector<TileType>> m_Matrix;
 
 public:
 	TileType pos2Tile(Vector2<float> pos);
-	Vector2<int> pos2MtrCoord(Vector2<float> pos);
-	Maze(int width, int height);
+	Vector2<int32_t> pos2MtrCoord(Vector2<float> pos);
+	Maze(int32_t width, int32_t height);
 	Maze();
 	~Maze();
 	std::unique_ptr<Maze> Copy();

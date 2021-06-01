@@ -25,19 +25,20 @@
 
 #if defined(NDEBUG) /* Release Mode */
 
-#  define NL_RETURN(rc) return (rc)
+#define NL_RETURN(rc) return (rc)
 
 #else /* Debug Mode */
 
-#  define NL_RETURN(rc)                                       \
-   {                                                          \
-     if ((rc)) {                                              \
-       fprintf( stderr,                                       \
-                "Error(code:%d) at : %s (%s:%d)\n",           \
-                (rc), __FUNCTION__, __FILE__, __LINE__);      \
-     }                                                        \
-     return (rc);                                             \
-   }
+#define NL_RETURN(rc)                                  \
+  {                                                    \
+    if ((rc))                                          \
+    {                                                  \
+      fprintf(stderr,                                  \
+              "Error(code:%d) at : %s (%s:%d)\n",      \
+              (rc), __FUNCTION__, __FILE__, __LINE__); \
+    }                                                  \
+    return (rc);                                       \
+  }
 
 #endif /* NDEBUG */
 

@@ -5,15 +5,17 @@
 #include <stdlib.h>
 #include <memory>
 
-typedef struct Bbox{
+typedef struct Bbox
+{
 public:
 	float bottom;
 	float top;
 	float left;
 	float right;
-}Bbox, *pBox;
+} Bbox, *pBox;
 
-class Area{
+class Area
+{
 
 public:
 	std::unique_ptr<Bbox> m_Box;
