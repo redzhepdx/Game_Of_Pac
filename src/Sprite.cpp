@@ -1,22 +1,12 @@
 #include "Sprite.h"
 
-Sprite::Sprite() {
-}
 
-Sprite::Sprite(uint32_t textureBufferID, Vector2<float> position) {
+Sprite::Sprite(uint32_t textureBufferID, const Vector2<float>& position) {
     m_TextureBufferID = textureBufferID;
     m_Position = position;
     m_RotationAngle = 0.0f;
     //Set velocity to zero because it can get random value from random memory space
     m_Velocity = Vector2<float>(0.0f, 0.0f);
-}
-
-void Sprite::setArea(std::unique_ptr<Area> area) {
-    m_Area = std::move(area);
-}
-
-void Sprite::setMaze(std::unique_ptr<Maze> maze) {
-    m_Maze = std::move(maze);
 }
 
 void Sprite::setOffset(float offset) {
@@ -27,7 +17,7 @@ void Sprite::setRotation(float rotation) {
     m_RotationAngle = rotation;
 }
 
-float Sprite::getRotation() {
+float Sprite::getRotation() const {
     return m_RotationAngle;
 }
 
@@ -35,11 +25,11 @@ void Sprite::setTextureBufferID(uint32_t textureBufferID) {
     m_TextureBufferID = textureBufferID;
 }
 
-uint32_t Sprite::getTextureBufferID() {
+uint32_t Sprite::getTextureBufferID() const {
     return m_TextureBufferID;
 }
 
-void Sprite::setPosition(Vector2<float> newPosition) {
+void Sprite::setPosition(const Vector2<float> &newPosition) {
     m_Position = newPosition;
 }
 
@@ -47,7 +37,7 @@ Vector2<float> Sprite::getPosition() {
     return m_Position;
 }
 
-void Sprite::setVelocity(Vector2<float> newVelocity) {
+void Sprite::setVelocity(const Vector2<float> &newVelocity) {
     m_Velocity = newVelocity;
 }
 
@@ -55,7 +45,7 @@ Vector2<float> Sprite::getVelocity() {
     return m_Velocity;
 }
 
-void Sprite::render() {
+void Sprite::render() const {
     glBindTexture(GL_TEXTURE_2D, m_TextureBufferID);
 
     /*Rotation*/
@@ -76,24 +66,28 @@ void Sprite::update(GLFWwindow *window) {
     m_Position += m_Velocity;
 }
 
-bool Sprite::checkFullCollision(Vector2<float> speed) {
+bool Sprite::checkFullCollision(const Vector2<float> &speed, const std::unique_ptr<Maze> &gameMaze) {
     if (speed.x > 0.0f && speed.y > 0.0f) {
-        return checkDirectionCollision(Right) ||
-               checkDirectionCollision(Up);
+        return checkDirectionCollision(Right, gameMaze) ||
+               checkDirectionCollision(Up, gameMaze);
     } else if (speed.x > 0.0f && speed.y < 0.0f) {
-        return checkDirectionCollision(Right) ||
-               checkDirectionCollision(Down);
+        return checkDirectionCollision(Right, gameMaze) ||
+               checkDirectionCollision(Down, gameMaze);
     } else if (speed.x < 0.0f && speed.y > 0.0f) {
-        return checkDirectionCollision(Left) ||
-               checkDirectionCollision(Up);
+        return checkDirectionCollision(Left, gameMaze) ||
+               checkDirectionCollision(Up, gameMaze);
     } else if (speed.x < 0.0f && speed.y < 0.0f) {
-        return checkDirectionCollision(Left) ||
-               checkDirectionCollision(Down);
+        return checkDirectionCollision(Left, gameMaze) ||
+               checkDirectionCollision(Down, gameMaze);
     } else if (speed.x == 0.0f && speed.y != 0.0f) {
-        bool res = (speed.y > 0) ? checkDirectionCollision(Up) : checkDirectionCollision(Down);
+        bool res = (speed.y > 0) ?
+                   checkDirectionCollision(Up, gameMaze) :
+                   checkDirectionCollision(Down, gameMaze);
         return res;
     } else if (speed.y == 0.0f && speed.x != 0.0f) {
-        bool res = (speed.x > 0) ? checkDirectionCollision(Right) : checkDirectionCollision(Left);
+        bool res = (speed.x > 0) ?
+                   checkDirectionCollision(Right, gameMaze) :
+                   checkDirectionCollision(Left, gameMaze);
         return res;
     }
 
@@ -101,7 +95,7 @@ bool Sprite::checkFullCollision(Vector2<float> speed) {
     return false;
 }
 
-bool Sprite::checkDirectionCollision(Direction dir) {
+bool Sprite::checkDirectionCollision(Direction dir, const std::unique_ptr<Maze> &gameMaze) {
     //Offset for the pass between two tiles
 
     if (dir == Left) {
@@ -111,8 +105,8 @@ bool Sprite::checkDirectionCollision(Direction dir) {
         Vector2<float> bottomLeft(getPosition().x - getVelocity().x + m_Offset,
                                   getPosition().y + SQUARE_SIZE - m_Offset);
 
-        TileType tile_type_top_left = m_Maze->pos2Tile(topLeft);
-        TileType tile_type_bot_left = m_Maze->pos2Tile(bottomLeft);
+        TileType tile_type_top_left = gameMaze->pos2Tile(topLeft);
+        TileType tile_type_bot_left = gameMaze->pos2Tile(bottomLeft);
 
         return tile_type_top_left == Wall || tile_type_bot_left == Wall;
     } else if (dir == Right) {
@@ -121,8 +115,8 @@ bool Sprite::checkDirectionCollision(Direction dir) {
 
         Vector2<float> bottomRight(getPosition().x + SQUARE_SIZE + getVelocity().x - m_Offset,
                                    getPosition().y + SQUARE_SIZE - m_Offset);
-        TileType tile_type_top_right = m_Maze->pos2Tile(topRight);
-        TileType tile_type_bot_right = m_Maze->pos2Tile(bottomRight);
+        TileType tile_type_top_right = gameMaze->pos2Tile(topRight);
+        TileType tile_type_bot_right = gameMaze->pos2Tile(bottomRight);
 
         return tile_type_top_right == Wall || tile_type_bot_right == Wall;
     } else if (dir == Up) {
@@ -131,8 +125,8 @@ bool Sprite::checkDirectionCollision(Direction dir) {
         Vector2<float> topRight(getPosition().x + SQUARE_SIZE - m_Offset,
                                 getPosition().y + SQUARE_SIZE + getVelocity().y - m_Offset);
 
-        TileType tile_type_top_left = m_Maze->pos2Tile(topLeft);
-        TileType tile_type_top_right = m_Maze->pos2Tile(topRight);
+        TileType tile_type_top_left = gameMaze->pos2Tile(topLeft);
+        TileType tile_type_top_right = gameMaze->pos2Tile(topRight);
 
         return tile_type_top_left == Wall || tile_type_top_right == Wall;
     } else if (dir == Down) {
@@ -141,8 +135,8 @@ bool Sprite::checkDirectionCollision(Direction dir) {
         Vector2<float> bottomRight(getPosition().x + SQUARE_SIZE - m_Offset,
                                    getPosition().y - getVelocity().y + m_Offset);
 
-        TileType tile_type_bot_left = m_Maze->pos2Tile(bottomLeft);
-        TileType tile_type_bot_right = m_Maze->pos2Tile(bottomRight);
+        TileType tile_type_bot_left = gameMaze->pos2Tile(bottomLeft);
+        TileType tile_type_bot_right = gameMaze->pos2Tile(bottomRight);
 
         return tile_type_bot_left == Wall || tile_type_bot_right == Wall;
     }

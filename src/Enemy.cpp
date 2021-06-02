@@ -1,8 +1,6 @@
 #include "Enemy.h"
 
-Enemy::Enemy() = default;
-
-Enemy::Enemy(uint32_t textureBufferID, const Vector2<float>& position) : Sprite(textureBufferID, position) {
+Enemy::Enemy(uint32_t textureBufferID, const Vector2<float> &position) : Sprite(textureBufferID, position) {
     m_Type = Chaser;
 
     m_PrevPlayerTilePos.x = -1;
@@ -16,7 +14,9 @@ Enemy::Enemy(uint32_t textureBufferID, const Vector2<float>& position) : Sprite(
     m_ActionTicks = 0;
 }
 
-Enemy::Enemy(uint32_t textureBufferID, const Vector2<float>& position, EnemyType type) : Sprite(textureBufferID, position) {
+Enemy::Enemy(uint32_t textureBufferID,
+             const Vector2<float> &position,
+             EnemyType type) : Sprite(textureBufferID, position) {
     m_Type = type;
 
     m_PrevPlayerTilePos.x = -1;
@@ -28,12 +28,6 @@ Enemy::Enemy(uint32_t textureBufferID, const Vector2<float>& position, EnemyType
     m_Stuck = false;
     m_OnAction = true;
     m_ActionTicks = 0;
-}
-
-Enemy::~Enemy() = default;
-
-void Enemy::setArea(std::unique_ptr<Area> area) {
-    m_Area = std::move(area);
 }
 
 Vector2<float> Enemy::getPosition() {
@@ -85,53 +79,58 @@ std::unique_ptr<Sprite> Enemy::Copy() {
     copy->m_Velocity = m_Velocity;
 
     copy->setRotation(Sprite::getRotation());
-    copy->setArea(m_Area->Copy());
+
     return copy;
 }
 
-void Enemy::update(const Vector2<float> &playerPos, const shared_point_matrix &grid) {
+void Enemy::update(const Vector2<float> &playerPos,
+                   const shared_point_matrix &grid,
+                   const std::unique_ptr<Maze> &gameMaze) {
     switch (m_Type) {
         case Chaser: {
             // Chase and Bite
-            chaserUpdate(playerPos, grid);
+            chaserUpdate(playerPos, grid, gameMaze);
         }
             break;
 
         case Sniper: {
             // Shoot twice when it is in a valid range
-            sniperUpdate(playerPos, grid);
+            sniperUpdate(playerPos, grid, gameMaze);
         }
             break;
 
         case SuicideBomber: {
             // Pick a random spot and explode if player is in range
-            suicideBomberUpdate(playerPos, grid);
+            suicideBomberUpdate(playerPos, grid, gameMaze);
             spdlog::info("Boom Exploded!");
         }
             break;
 
         case AI: {
             // Duplicate of player but controlled by an algorithm
-            aiUpdate(playerPos, grid);
+            aiUpdate(playerPos, grid, gameMaze);
             spdlog::info("AI My Friend! Artificial Intelligence");
         }
             break;
     }
 }
 
-void Enemy::chaserUpdate(const Vector2<float> &playerPos, const shared_point_matrix &grid) {
-    Vector2<int32_t> player_tile_pos = m_Maze->pos2MtrCoord(playerPos);
-    Vector2<int32_t> current_tile = m_Maze->pos2MtrCoord(m_Position);
+void Enemy::chaserUpdate(const Vector2<float> &playerPos,
+                         const shared_point_matrix &grid,
+                         const std::unique_ptr<Maze> &gameMaze) {
+    Vector2<int32_t> player_tile_pos = gameMaze->pos2MtrCoord(playerPos);
+    Vector2<int32_t> current_tile = gameMaze->pos2MtrCoord(m_Position);
 
     Vector2<float> current_tile_pos((float) current_tile.y * SQUARE_SIZE, WIDTH - (float) current_tile.x * SQUARE_SIZE);
 
     bool player_pos_changed = player_tile_pos != m_PrevPlayerTilePos;
-    bool moving_to_the_next_cell = (m_Position - m_NextTilePos).magnitute() >= 1.0f;
+    bool moving_to_the_next_cell = (m_Position - m_NextTilePos).magnitude() >= 1.0f;
     bool chasing_on = m_NextTilePos.x >= 0.0f;
 
     if ((player_pos_changed && !moving_to_the_next_cell) || !chasing_on || m_Stuck) {
         // Get the route to player
-        std::vector<Vector2<int32_t>> route = utility::findRoute(m_Maze->m_Matrix, grid, current_tile, player_tile_pos);
+        std::vector<Vector2<int32_t>> route = utility::findRoute(gameMaze->m_Matrix, grid, current_tile,
+                                                                 player_tile_pos);
 
         if (!route.empty()) {
             // Store new route to player
@@ -171,16 +170,16 @@ void Enemy::chaserUpdate(const Vector2<float> &playerPos, const shared_point_mat
         Vector2<float> dirToNext = (m_NextTilePos - current_tile_pos).normalize();
         setVelocity(dirToNext * ENEMY_SPEED);
     }
-
-    move();
+    move(gameMaze);
 }
 
-void Enemy::move() {
+void Enemy::move(const std::unique_ptr<Maze> &gameMaze) {
     // Directional Boundary Check Otherwise Object can pass through obstacles
     Direction horizontalDirection = (getVelocity().y > 0.0f) ? Up : Down;
     Direction verticalDirection = (getVelocity().x > 0.0f) ? Right : Left;
 
-    if (!checkDirectionCollision(horizontalDirection) || !checkDirectionCollision(verticalDirection)) {
+    if (!checkDirectionCollision(horizontalDirection, gameMaze) ||
+        !checkDirectionCollision(verticalDirection, gameMaze)) {
         m_Position += getVelocity();
     } else {
         // Move to closest tile
@@ -190,7 +189,9 @@ void Enemy::move() {
     }
 }
 
-void Enemy::sniperUpdate(const Vector2<float> &playerPos, const shared_point_matrix &grid) {
+void Enemy::sniperUpdate(const Vector2<float> &playerPos,
+                         const shared_point_matrix &grid,
+                         const std::unique_ptr<Maze> &gameMaze) {
     // TODO : Coming Soon
     float distance = utility::dist_euc<float>(m_Position, playerPos);
 
@@ -205,10 +206,10 @@ void Enemy::sniperUpdate(const Vector2<float> &playerPos, const shared_point_mat
 
     if (distance < SNIPER_SIGHT_DISTANCE) {
         // Ray cast and check the line is free
-        Vector2<int32_t> playerTilePos = m_Maze->pos2MtrCoord(playerPos);
-        Vector2<int32_t> currentTilePos = m_Maze->pos2MtrCoord(m_Position);
+        Vector2<int32_t> playerTilePos = gameMaze->pos2MtrCoord(playerPos);
+        Vector2<int32_t> currentTilePos = gameMaze->pos2MtrCoord(m_Position);
 
-        bool isSightOpen = utility::rayCastObstacleCheck(m_Maze->m_Matrix, currentTilePos, playerTilePos);
+        bool isSightOpen = utility::rayCastObstacleCheck(gameMaze->m_Matrix, currentTilePos, playerTilePos);
 
         if (isSightOpen) {
             // Shoot
@@ -221,11 +222,15 @@ void Enemy::sniperUpdate(const Vector2<float> &playerPos, const shared_point_mat
     }
 }
 
-void Enemy::suicideBomberUpdate(const Vector2<float> &playerPos, const shared_point_matrix &grid) {
+void Enemy::suicideBomberUpdate(const Vector2<float> &playerPos,
+                                const shared_point_matrix &grid,
+                                const std::unique_ptr<Maze> &gameMaze) {
     // TODO : Coming Soon
     // Find the closest teleportation point32_t and settle at the other side (REAL MOFO)
 }
 
-void Enemy::aiUpdate(const Vector2<float> &playerPos, const shared_point_matrix &grid) {
+void Enemy::aiUpdate(const Vector2<float> &playerPos,
+                     const shared_point_matrix &grid,
+                     const std::unique_ptr<Maze> &gameMaze) {
     // TODO : Coming Soon
 }

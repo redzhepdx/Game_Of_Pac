@@ -60,8 +60,6 @@ public:
 public:
     void setHealth(int32_t new_health);
 
-    void setArea(std::unique_ptr<Area> area) override;
-
     void setTextureBufferID(uint32_t textureBufferID) override;
 
     void setFireStatus(bool status);
@@ -88,14 +86,18 @@ public:
 
     uint32_t TextureBufferID();
 
-    void update(GLFWwindow *window, std::unique_ptr<GameState> currentState);
+    void update(GLFWwindow *window,
+                std::unique_ptr<GameState> currentState,
+                const std::unique_ptr<Area> &gameArea,
+                const std::unique_ptr<Maze> &gameMaze) override;
 
     // This is for ai but it will play a role in the future
     void updateAgent(std::unique_ptr<GameState> currentState);
 
     void manualControlPlayer(GLFWwindow *window);
 
-    void executeActions();
+    void executeActions(const std::unique_ptr<Area> &gameArena,
+                        const std::unique_ptr<Maze> &gameMaze);
 
     void showStatistics();
 };

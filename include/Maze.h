@@ -9,6 +9,7 @@
 #include "Area.h"
 #include "Vector2.h"
 #include "config.h"
+#include "spdlog/spdlog.h"
 
 class Maze {
 public:
@@ -29,7 +30,7 @@ public:
 
     [[nodiscard]] std::unique_ptr<Maze> Copy() const;
 
-    void print();
+    void print() const;
 };
 
 #endif

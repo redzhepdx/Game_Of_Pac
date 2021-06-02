@@ -25,19 +25,19 @@ template Vector2<float>::Vector2(const Vector2<float> &other);
 template Vector2<int32_t>::Vector2(const Vector2<int32_t> &other);
 
 template<typename T>
-T Vector2<T>::magnitute() const {
+T Vector2<T>::magnitude() const {
     return x * x + y * y;
 }
 
-template float Vector2<float>::magnitute() const;
+template float Vector2<float>::magnitude() const;
 
-template int Vector2<int32_t>::magnitute() const;
+template int Vector2<int32_t>::magnitude() const;
 
 template<typename T>
 Vector2<T> Vector2<T>::normalize() {
-    T magnitute = this->magnitute();
+    T magnitude = this->magnitude();
 
-    auto inv_sqrt_mag = inverse_sqrt<float, 2>((float) magnitute);
+    auto inv_sqrt_mag = inverse_sqrt<float, 2>((float) magnitude);
 
     this->x *= (T) inv_sqrt_mag;
     this->y *= (T) inv_sqrt_mag;

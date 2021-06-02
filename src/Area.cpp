@@ -20,3 +20,7 @@ std::unique_ptr<Area> Area::Copy() const {
     copy->m_Box->right = m_Box->right;
     return copy;
 }
+
+void Area::print() const {
+    spdlog::info("top : {} bottom : {} left : {} right : {}", m_Box->top, m_Box->bottom, m_Box->left, m_Box->right);
+}

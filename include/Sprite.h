@@ -9,61 +9,67 @@
 #include "Maze.h"
 #include "config.h"
 #include "point.h"
+#include "GameState.h"
 
 class Sprite {
 public:
     float m_RotationSpeed = 10.0;
 
 private:
-    uint32_t m_TextureBufferID;
+    uint32_t m_TextureBufferID{};
 
 protected:
-    std::unique_ptr<Area> m_Area;
-    std::unique_ptr<Maze> m_Maze;
-
-    float m_RotationAngle;
+    float m_RotationAngle{};
     float m_Offset = 0.0f;
     Vector2<float> m_Velocity;
     Vector2<float> m_Position;
 
 public:
-    Sprite();
+    Sprite() = default;
 
-    Sprite(uint32_t textureBufferID, Vector2<float> position);
-
-    virtual void setArea(std::unique_ptr<Area> area);
+    Sprite(uint32_t textureBufferID, const Vector2<float>& position);
 
     void setOffset(float offset);
 
-    void setMaze(std::unique_ptr<Maze> maze);
-
     void setRotation(float rotation);
 
-    float getRotation();
+    [[nodiscard]] float getRotation() const;
 
     virtual void setTextureBufferID(uint32_t textureBufferID);
 
-    uint32_t getTextureBufferID();
+    [[nodiscard]] uint32_t getTextureBufferID() const;
 
-    void setPosition(Vector2<float> newPosition);
+    void setPosition(const Vector2<float> &newPosition);
 
     virtual Vector2<float> getPosition();
 
-    void setVelocity(Vector2<float> newVelocity);
+    void setVelocity(const Vector2<float> &newVelocity);
 
     Vector2<float> getVelocity();
 
     virtual std::unique_ptr<Sprite> Copy();
 
-    bool checkDirectionCollision(Direction dir);
+    bool checkDirectionCollision(Direction dir, const std::unique_ptr<Maze> &gameMaze);
 
-    bool checkFullCollision(Vector2<float> speed);
+    bool checkFullCollision(const Vector2<float> &speed, const std::unique_ptr<Maze> &gameMaze);
 
-    void render();
+    void render() const;
 
     virtual void update(GLFWwindow *window);
 
-    virtual void update(const Vector2<float> &playerPos, const std::vector<std::vector<std::shared_ptr<Point>>> &grid) {}
+    virtual void update(const Vector2<float> &playerPos,
+                        const std::vector<std::vector<std::shared_ptr<Point>>> &grid) {}
+
+
+    virtual void update(const Vector2<float> &playerPos,
+                        const std::vector<std::vector<std::shared_ptr<Point>>> &grid,
+                        const std::unique_ptr<Maze> &gameMaze) {}
+
+    virtual void update(GLFWwindow *window,
+                        std::unique_ptr<GameState> currentState,
+                        const std::unique_ptr<Area> &gameArea,
+                        const std::unique_ptr<Maze> &gameMaze) {}
+
 };
 
 #endif

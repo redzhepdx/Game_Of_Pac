@@ -49,7 +49,7 @@ public:
 
     ~Vector2() = default;
 
-    T magnitute() const;
+    T magnitude() const;
 
     Vector2<T> normalize();
 

@@ -5,6 +5,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <memory>
+#include "spdlog/spdlog.h"
 
 typedef struct Bbox {
 public:
@@ -27,6 +28,8 @@ public:
     ~Area() = default;
 
     [[nodiscard]] std::unique_ptr<Area> Copy() const;
+
+    void print() const;
 };
 
 #endif

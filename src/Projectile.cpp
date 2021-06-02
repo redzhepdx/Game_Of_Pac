@@ -1,18 +1,14 @@
 #include "Projectile.h"
 
 
-Projectile::Projectile(uint32_t textureBufferID, const Vector2<float>& position) : Sprite(textureBufferID, position) {
+Projectile::Projectile(uint32_t textureBufferID, const Vector2<float> &position) : Sprite(textureBufferID, position) {
     m_Type = PlayerBullet;
 }
 
-Projectile::Projectile(uint32_t textureBufferID, const Vector2<float>& position, BulletType type) : Sprite(textureBufferID,
-                                                                                                    position) {
+Projectile::Projectile(uint32_t textureBufferID, const Vector2<float> &position, BulletType type) : Sprite(
+        textureBufferID,
+        position) {
     m_Type = type;
-}
-
-
-void Projectile::setArea(std::unique_ptr<Area> area) {
-    m_Area = std::move(area);
 }
 
 Vector2<float> Projectile::getPosition() {
@@ -52,7 +48,6 @@ std::unique_ptr<Sprite> Projectile::Copy() {
     copy->m_Type = m_Type;
 
     copy->setRotation(Sprite::getRotation());
-    copy->setArea(m_Area->Copy());
     return copy;
 }
 

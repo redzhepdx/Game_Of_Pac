@@ -33,7 +33,8 @@ GameWindow::~GameWindow() {
 void GameWindow::play(GLFWwindow *window) {
     double lastTime = glfwGetTime();
     double deltaTime = 0.0f;
-    double currentTime = 0.0f;
+    [[maybe_unused]] double currentTime = 0.0f;
+
     int64_t fps = 0;
     int32_t episode_count = 0;
 
@@ -60,7 +61,7 @@ void GameWindow::play(GLFWwindow *window) {
         if (m_Player->getHealth() <= 0) {
             restart(window);
 
-            if (episode_count == 2) {
+            if (episode_count == 1) {
                 break;
             }
 //            episode_count++;
@@ -375,8 +376,6 @@ void GameWindow::initPlayer() {
     // Initialize Player
     m_Player->setPosition(Vector2<float>((float) randomPosition.y * SQUARE_SIZE,
                                          (float) m_Width - (float) randomPosition.x * SQUARE_SIZE));
-    m_Player->setArea(m_GameArena->Copy());
-    m_Player->setMaze(m_Maze->Copy());
 }
 
 bool GameWindow::isPositionValid(Vector2<int32_t> &position, int32_t min_row, int32_t max_row, int32_t min_col,
@@ -398,8 +397,6 @@ void GameWindow::firePlayerBullet() {
 
     bullet->setVelocity(bullet_relative_speed);
     bullet->setRotation(m_Player->getRotation());
-    bullet->setArea(m_GameArena->Copy());
-    bullet->setMaze(m_Maze->Copy());
     bullet->setOffset(OBJECT_OFFSET);
 
     m_BulletInstances.push_back(std::move(bullet));
@@ -412,9 +409,6 @@ void GameWindow::fireEnemyBullet(const Vector2<float> &enemyPosition, const Vect
     Vector2<float> bullet_relative_speed = direction * 4.0f;
 
     enemyBullet->setVelocity(bullet_relative_speed);
-    enemyBullet->setRotation(m_Player->getRotation());
-    enemyBullet->setArea(m_GameArena->Copy());
-    enemyBullet->setMaze(m_Maze->Copy());
     enemyBullet->setOffset(OBJECT_OFFSET);
 
     enemyBullet->setRotation(direction.angle());
@@ -482,8 +476,6 @@ void GameWindow::spawnEnemies() {
                                                                               (float) randomPosition.x * SQUARE_SIZE),
                                                                targetEnemyType);
 
-        enemy->setArea(m_GameArena->Copy());
-        enemy->setMaze(m_Maze->Copy());
         enemy->setOffset(OBJECT_OFFSET);
 
         m_EnemyInstances.push_back(std::move(enemy));
@@ -557,7 +549,7 @@ void GameWindow::handleCollisions() {
 
         if (bulletPosition.x > ((float) m_Width + SQUARE_SIZE) || bulletPosition.y > ((float) m_Height + SQUARE_SIZE) ||
             bulletPosition.x < (-SQUARE_SIZE) || bulletPosition.y < (-SQUARE_SIZE) ||
-            m_BulletInstances[bulletIdx]->checkFullCollision(m_BulletInstances[bulletIdx]->getVelocity())) {
+            m_BulletInstances[bulletIdx]->checkFullCollision(m_BulletInstances[bulletIdx]->getVelocity(), m_Maze)) {
             bulletsToDestroy.push_back(bulletIdx);
         }
     }
@@ -593,7 +585,8 @@ void GameWindow::handleCollisions() {
         // Tile Collision and Map Check
         if (bulletPosition.x > ((float) m_Width + SQUARE_SIZE) || bulletPosition.y > ((float) m_Height + SQUARE_SIZE) ||
             bulletPosition.x < (-SQUARE_SIZE) || bulletPosition.y < (-SQUARE_SIZE) ||
-            m_EnemyBulletInstances[bulletIdx]->checkFullCollision(m_EnemyBulletInstances[bulletIdx]->getVelocity())) {
+            m_EnemyBulletInstances[bulletIdx]->checkFullCollision(m_EnemyBulletInstances[bulletIdx]->getVelocity(),
+                                                                  m_Maze)) {
             bulletsToDestroy.push_back(bulletIdx);
         }
     }
@@ -725,7 +718,7 @@ void GameWindow::update(GLFWwindow *window) {
 
             enemy->stopAction();
         }
-        enemy->update(m_Player->getPosition(), m_Grid);
+        enemy->update(m_Player->getPosition(), m_Grid, m_Maze);
     }
 
     for (const auto &enemyBullet : m_EnemyBulletInstances) {
@@ -736,11 +729,11 @@ void GameWindow::update(GLFWwindow *window) {
     if (m_ObservationType == Image) {
         m_ImageBuffer.push_back(getCurrentImageGameState(window));
         if (m_ImageBuffer.size() >= IMAGE_OBS_COUNT) {
-            m_Player->update(window, this->getCurrentGameState(window));
+            m_Player->update(window, this->getCurrentGameState(window), m_GameArena, m_Maze);
         }
     } else {
         // Internal Observations
-        m_Player->update(window, this->getCurrentGameState(window));
+        m_Player->update(window, this->getCurrentGameState(window), m_GameArena, m_Maze);
     }
 
     // Random Restart Check!

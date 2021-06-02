@@ -44,8 +44,6 @@ public:
 
     void setTextureBufferID(uint32_t textureBufferID) override;
 
-    void setArea(std::unique_ptr<Area> area) override;
-
     void setType(BulletType targetType);
 
     std::unique_ptr<Sprite> Copy() override;

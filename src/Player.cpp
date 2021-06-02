@@ -41,14 +41,6 @@ Player::Player(uint32_t textureBufferID, const Vector2<float> &position, PlayerC
     }
 }
 
-// virtual Player::~Player()
-// {
-// }
-
-void Player::setArea(std::unique_ptr<Area> area) {
-    m_Area = std::move(area);
-}
-
 Vector2<float> Player::getPosition() {
     return m_Position;
 }
@@ -117,21 +109,22 @@ std::unique_ptr<Sprite> Player::Copy() {
     copy->m_Velocity = m_Velocity;
 
     copy->setRotation(Sprite::getRotation());
-    copy->setArea(m_Area->Copy());
 
     return copy;
 }
 
-void Player::update(GLFWwindow *window, std::unique_ptr<GameState> currentState) {
+void Player::update(GLFWwindow *window,
+                    std::unique_ptr<GameState> currentState,
+                    const std::unique_ptr<Area> &gameArea,
+                    const std::unique_ptr<Maze> &gameMaze) {
     // Reset Action Vector
     std::fill(m_Actions.begin(), m_Actions.end(), false);
 
-    // if (m_Health <= 0)
-    // {
-    // 	// glfwSetWindowShouldClose(window, GLFW_TRUE);
-    // 	return;
-    // }
     if (m_ControlType == MANUAL) {
+        if (m_Health <= 0) {
+            // glfwSetWindowShouldClose(window, GLFW_TRUE);
+            return;
+        }
         if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
             // Shaking algorithm for fun
             Vector2<float> newPos = (m_Position + m_Velocity);
@@ -145,23 +138,23 @@ void Player::update(GLFWwindow *window, std::unique_ptr<GameState> currentState)
         updateAgent(std::move(currentState));
     }
 
-    executeActions();
+    executeActions(gameArea, gameMaze);
 
     if (m_TeleportTicks > 0) {
         --m_TeleportTicks;
     }
 }
 
-void Player::executeActions() {
+void Player::executeActions(const std::unique_ptr<Area> &gameArea, const std::unique_ptr<Maze> &gameMaze) {
     if (m_Actions[0]) {
         //Go Right
         Vector2<float> direction(m_Velocity.x, 0.0f);
-        if (!checkDirectionCollision(Right)) {
-            if (m_Position.x < m_Area->m_Box->right - SQUARE_SIZE / 1.0f) {
+        if (!checkDirectionCollision(Right, gameMaze)) {
+            if (m_Position.x < gameArea->m_Box->right - SQUARE_SIZE / 1.0f) {
                 m_Position += direction;
-            } else if (m_Maze->pos2Tile(Vector2<float>(m_Area->m_Box->left, m_Position.y)) == Teleport &&
+            } else if (gameMaze->pos2Tile(Vector2<float>(gameArea->m_Box->left, m_Position.y)) == Teleport &&
                        m_TeleportTicks == 0) {
-                m_Position.x = m_Area->m_Box->left + (SQUARE_SIZE * 0.75);
+                m_Position.x = gameArea->m_Box->left + (float) (SQUARE_SIZE * 0.75);
                 m_Position.y = (float) (m_Position.y / SQUARE_SIZE) * SQUARE_SIZE;
 
                 m_TeleportTicks = PLAYER_TP_TICKS;
@@ -172,12 +165,12 @@ void Player::executeActions() {
     if (m_Actions[1]) {
         //Go Up
         Vector2<float> direction(0.0f, m_Velocity.y);
-        if (!checkDirectionCollision(Up)) {
-            if (m_Position.y < m_Area->m_Box->top - SQUARE_SIZE / 1.0f) {
+        if (!checkDirectionCollision(Up, gameMaze)) {
+            if (m_Position.y < gameArea->m_Box->top - SQUARE_SIZE / 1.0f) {
                 m_Position += direction;
-            } else if (m_Maze->pos2Tile(Vector2<float>(m_Position.x, m_Area->m_Box->bottom)) == Teleport &&
+            } else if (gameMaze->pos2Tile(Vector2<float>(m_Position.x, gameArea->m_Box->bottom)) == Teleport &&
                        m_TeleportTicks == 0) {
-                m_Position.y = m_Area->m_Box->bottom + (float)(SQUARE_SIZE * 0.75);
+                m_Position.y = gameArea->m_Box->bottom + (float) (SQUARE_SIZE * 0.75);
                 m_Position.x = (float) (m_Position.x / SQUARE_SIZE) * SQUARE_SIZE;
 
                 m_TeleportTicks = PLAYER_TP_TICKS;
@@ -188,12 +181,12 @@ void Player::executeActions() {
     if (m_Actions[2]) {
         //Go Down
         Vector2<float> direction(0.0f, m_Velocity.y);
-        if (!checkDirectionCollision(Down)) {
-            if (m_Position.y > m_Area->m_Box->bottom + SQUARE_SIZE / 1.0f) {
+        if (!checkDirectionCollision(Down, gameMaze)) {
+            if (m_Position.y > gameArea->m_Box->bottom + SQUARE_SIZE / 1.0f) {
                 m_Position -= direction;
-            } else if (m_Maze->pos2Tile(Vector2<float>(m_Position.x, m_Area->m_Box->top)) == Teleport &&
+            } else if (gameMaze->pos2Tile(Vector2<float>(m_Position.x, gameArea->m_Box->top)) == Teleport &&
                        m_TeleportTicks == 0) {
-                m_Position.y = m_Area->m_Box->top - (float)(SQUARE_SIZE * 0.75);
+                m_Position.y = gameArea->m_Box->top - (float) (SQUARE_SIZE * 0.75);
                 m_Position.x = (float) (m_Position.x / SQUARE_SIZE) * SQUARE_SIZE;
 
                 m_TeleportTicks = PLAYER_TP_TICKS;
@@ -204,12 +197,12 @@ void Player::executeActions() {
     if (m_Actions[3]) {
         //Go Left
         Vector2<float> direction(m_Velocity.x, 0.0f);
-        if (!checkDirectionCollision(Left)) {
-            if (m_Position.x > m_Area->m_Box->left + SQUARE_SIZE / 1.0f) {
+        if (!checkDirectionCollision(Left, gameMaze)) {
+            if (m_Position.x > gameArea->m_Box->left + SQUARE_SIZE / 1.0f) {
                 m_Position -= direction;
-            } else if (m_Maze->pos2Tile(Vector2<float>(m_Area->m_Box->right, m_Position.y)) == Teleport &&
+            } else if (gameMaze->pos2Tile(Vector2<float>(gameArea->m_Box->right, m_Position.y)) == Teleport &&
                        m_TeleportTicks == 0) {
-                m_Position.x = m_Area->m_Box->right - (float)(SQUARE_SIZE * 0.75);
+                m_Position.x = gameArea->m_Box->right - (float)(SQUARE_SIZE * 0.75);
                 m_Position.y = (float) (m_Position.y / SQUARE_SIZE) * SQUARE_SIZE;
 
                 m_TeleportTicks = PLAYER_TP_TICKS;
@@ -293,7 +286,7 @@ void Player::updateAgent(std::unique_ptr<GameState> currentState) {
     m_PrevScore = m_Score;
 
     if (m_Agent->totalStepCount() % 200 == 0) {
-        spdlog::info("Current Player Score : {}", m_PrevScore);
+        spdlog::info("[Player]Current Player Score : {}", m_PrevScore);
     }
 
     // Execute a single Action
