@@ -13,14 +13,14 @@
 
 #undef BOOST_NO_CXX11_SCOPED_ENUMS
 
-#include "config.h"
+#include "Config.h"
 
 #include "Network.h"
 #include "Utility.h"
 #include "Memory.h"
 #include "GameState.h"
 
-#include "spdlog/spdlog.h"
+#include "MemoryDebug.h"
 
 class Agent {
 
@@ -50,7 +50,7 @@ private:
         dynamic_cast<torch::optim::AdamOptions &>(m_Optimizer->param_groups()[0].options()).lr(new_lr_rate);
     }
 
-    void updateOptimizerParameters(const std::vector<torch::Tensor>& network_parameters) {
+    void updateOptimizerParameters(const std::vector<torch::Tensor> &network_parameters) {
         m_Optimizer = std::make_unique<torch::optim::Adam>(network_parameters, LR_RATE);
     }
 
@@ -86,25 +86,62 @@ public:
         this->loadNetworks();
     }
 
-    void step(std::unique_ptr<GameState> current_state, std::unique_ptr<GameState> next_state, int action, float reward,
-              bool done) {
-        m_Memory->add(std::move(current_state), std::move(next_state), action, reward, done);
+    void step(std::unique_ptr<GameState> current_state,
+              std::unique_ptr<GameState> next_state,
+              int8_t action, float reward, bool done) {
+
+        if (DEBUG_LOG) {
+            auto AllocationCheckMemoryAdd = ALLOCATION_CHECK_V(
+                    [&](std::unique_ptr<GameState> curr_state, std::unique_ptr<GameState> nxt_state,
+                        int8_t c_action, float c_reward, bool c_done) {
+                        return m_Memory->add(std::move(curr_state),
+                                             std::move(nxt_state),
+                                             c_action, c_reward, c_done);
+                    });
+
+            AllocationCheckMemoryAdd(std::move(current_state), std::move(next_state), action, reward, done);
+        } else {
+            m_Memory->add(std::move(current_state), std::move(next_state), action, reward, done);
+        }
 
         if (m_Memory->capacity() > BATCH_SIZE && m_Step % TRAIN_EVERY == 0) {
             for (uint32_t sampling_iter = 0; sampling_iter < SAMPLING_ITERATION; ++sampling_iter) {
-                GroupTensorExperience experiences = m_Memory->sample();
-                this->learn(experiences);
+                if (DEBUG_LOG) {
+
+                    auto AllocationCheckMemorySampling = ALLOCATION_CHECK_R([&]() {
+                        return m_Memory->sample();
+                    });
+
+                    auto AllocationCheckAgentLearn = ALLOCATION_CHECK_V(
+                            [&](const GroupTensorExperience &experiences) {
+                                return this->learn(experiences);
+                            });
+
+                    GroupTensorExperience experiences = AllocationCheckMemorySampling();
+                    AllocationCheckAgentLearn(experiences);
+                } else {
+                    GroupTensorExperience experiences = m_Memory->sample();
+                    this->learn(experiences);
+                }
+
             }
         }
 
         if (m_Step % SAVE_EVERY == 0 && m_Step > 0) {
-            this->saveNetworks();
-        }
+            if (DEBUG_LOG) {
+                auto AllocationCheckSaveNetworks = ALLOCATION_CHECK_V([&]() {
+                    return this->saveNetworks();
+                });
+                AllocationCheckSaveNetworks();
+            } else {
+                this->saveNetworks();
+            }
 
+        }
         ++m_Step;
     }
 
-    void learn(const GroupTensorExperience& experiences) {
+    void learn(const GroupTensorExperience &experiences) {
         // Double Q Learning
 
         torch::Tensor current_states;
@@ -251,7 +288,7 @@ public:
         printNetwork(m_ActorTarget);
     }
 
-    static void saveNetwork(std::shared_ptr<DQNetworkImpl> &network, const std::string& model_path) {
+    static void saveNetwork(std::shared_ptr<DQNetworkImpl> &network, const std::string &model_path) {
         torch::serialize::OutputArchive output_archive;
         network->save(output_archive);
         output_archive.save_to(model_path);
@@ -264,7 +301,7 @@ public:
         saveNetwork(m_ActorTarget, "ActorTarget.pt");
     }
 
-    void loadNetwork(std::shared_ptr<DQNetworkImpl> &network, const std::string& model_path) {
+    void loadNetwork(std::shared_ptr<DQNetworkImpl> &network, const std::string &model_path) {
         if (boost::filesystem::exists(model_path.c_str())) {
             torch::serialize::InputArchive archive;
             archive.load_from(model_path);

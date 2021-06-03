@@ -1,5 +1,5 @@
 #include <GameWindow.h>
-#include <config.h>
+#include <Config.h>
 #include <memory>
 #include <execinfo.h>
 #include <signal.h>

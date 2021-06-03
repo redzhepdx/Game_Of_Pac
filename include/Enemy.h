@@ -9,7 +9,7 @@
 #include "spdlog/spdlog.h"
 
 #include "Sprite.h"
-#include "utils.h"
+#include "Utils.h"
 
 enum EnemyType {
     Chaser,

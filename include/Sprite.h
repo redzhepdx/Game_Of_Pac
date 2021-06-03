@@ -7,8 +7,8 @@
 #include "Vector2.h"
 #include "Area.h"
 #include "Maze.h"
-#include "config.h"
-#include "point.h"
+#include "Config.h"
+#include "Point.h"
 #include "GameState.h"
 
 class Sprite {
@@ -27,7 +27,7 @@ protected:
 public:
     Sprite() = default;
 
-    Sprite(uint32_t textureBufferID, const Vector2<float>& position);
+    Sprite(uint32_t textureBufferID, const Vector2<float> &position);
 
     void setOffset(float offset);
 

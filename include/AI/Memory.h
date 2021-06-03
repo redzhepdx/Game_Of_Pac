@@ -12,7 +12,7 @@
 
 #include <torch/torch.h>
 
-#include "config.h"
+#include "Config.h"
 #include "GameState.h"
 
 typedef std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> GroupTensorExperience;
@@ -105,6 +105,10 @@ public:
 
     size_t capacity() {
         return m_Buffer.size();
+    }
+
+    bool isFull() {
+        return m_Buffer.full();
     }
 
 } ReplayMemory, *P_ReplayMemory;

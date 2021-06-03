@@ -9,7 +9,7 @@
 #include "spdlog/spdlog.h"
 
 #include "Vector2.h"
-#include "config.h"
+#include "Config.h"
 
 using namespace torch::nn::functional;
 
@@ -127,19 +127,19 @@ public:
         spdlog::info("m_AvailableProjectiles : {}", m_AvailableProjectiles);
 
         spdlog::info("ENEMY POSITIONS : ");
-        for (const Vector2<float>& pos : m_EnemyPositions) {
+        for (const Vector2<float> &pos : m_EnemyPositions) {
             spdlog::info("{} - {}", pos.x, pos.y);
         }
 
         spdlog::info("BULLET POSITIONS : ");
-        for (const Vector2<float>& pos : m_ActiveBulletPositions) {
+        for (const Vector2<float> &pos : m_ActiveBulletPositions) {
             spdlog::info("{} - {}", pos.x, pos.y);
         }
     }
 
     [[nodiscard]] uint32_t getObjectSize() const override {
         return sizeof(*this) + sizeof(float) * (m_EnemyPositions.size() + m_ActiveBulletDirections.size() +
-                                               m_ActiveBulletPositions.size());
+                                                m_ActiveBulletPositions.size());
     }
 };
 
@@ -180,7 +180,7 @@ public:
     }
 
 private:
-    [[nodiscard]] torch::Tensor preProcess(const BinaryImage& image) const {
+    [[nodiscard]] torch::Tensor preProcess(const BinaryImage &image) const {
         return torch::tensor(image).view({m_Width, m_Height}).to(torch::kFloat32).unsqueeze(0);
     }
 };

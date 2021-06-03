@@ -30,8 +30,8 @@
 #include "Projectile.h"
 
 #include "Area.h"
-#include "utils.h"
-#include "point.h"
+#include "Utils.h"
+#include "Point.h"
 #include "Maze.h"
 #include "Quadtree/Quadtree.h"
 

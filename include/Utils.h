@@ -13,9 +13,9 @@
 #include <torch/torch.h>
 
 #include "Vector2.h"
-#include "point.h"
+#include "Point.h"
 #include "Maze.h"
-#include "config.h"
+#include "Config.h"
 
 typedef std::vector<std::vector<std::shared_ptr<Point>>> shared_point_matrix;
 
@@ -63,7 +63,7 @@ namespace utility {
         shared_point_matrix grid;
         auto copy_point = [](const std::shared_ptr<Point> &ptr) -> std::shared_ptr<Point> { return ptr->Copy(); };
 
-        std::for_each(orig_grid.begin(), orig_grid.end(), [&](auto shared_point_vector){
+        std::for_each(orig_grid.begin(), orig_grid.end(), [&](auto shared_point_vector) {
             std::vector<std::shared_ptr<Point>> new_shared_point_vector;
             std::transform(shared_point_vector.begin(),
                            shared_point_vector.end(),

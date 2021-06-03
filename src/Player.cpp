@@ -202,7 +202,7 @@ void Player::executeActions(const std::unique_ptr<Area> &gameArea, const std::un
                 m_Position -= direction;
             } else if (gameMaze->pos2Tile(Vector2<float>(gameArea->m_Box->right, m_Position.y)) == Teleport &&
                        m_TeleportTicks == 0) {
-                m_Position.x = gameArea->m_Box->right - (float)(SQUARE_SIZE * 0.75);
+                m_Position.x = gameArea->m_Box->right - (float) (SQUARE_SIZE * 0.75);
                 m_Position.y = (float) (m_Position.y / SQUARE_SIZE) * SQUARE_SIZE;
 
                 m_TeleportTicks = PLAYER_TP_TICKS;

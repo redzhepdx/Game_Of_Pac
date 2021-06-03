@@ -1,5 +1,6 @@
 #include "GameWindow.h"
 
+
 GameWindow::GameWindow(bool status, int32_t width, int32_t height) : m_Status(status), m_Width(width), m_Height(height),
                                                                      m_VertexBufferID(0) {
     setupGL();
@@ -724,7 +725,6 @@ void GameWindow::update(GLFWwindow *window) {
     for (const auto &enemyBullet : m_EnemyBulletInstances) {
         enemyBullet->update(window);
     }
-
     // Image observations
     if (m_ObservationType == Image) {
         m_ImageBuffer.push_back(getCurrentImageGameState(window));
@@ -735,7 +735,6 @@ void GameWindow::update(GLFWwindow *window) {
         // Internal Observations
         m_Player->update(window, this->getCurrentGameState(window), m_GameArena, m_Maze);
     }
-
     // Random Restart Check!
     if (glfwGetKey(window, GLFW_KEY_U) == GLFW_TRUE) {
         restart(window);

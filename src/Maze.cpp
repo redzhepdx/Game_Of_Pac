@@ -22,7 +22,7 @@ Vector2<int32_t> Maze::pos2MtrCoord(const Vector2<float> &pos) const {
     return Vector2<int32_t>(row_pos, col_pos);
 }
 
-void Maze::print() const{
+void Maze::print() const {
     spdlog::info("Maze!");
     for (int32_t row = 0; row < m_Width + 1; ++row) {
         for (int32_t col = 0; col < m_Height + 1; ++col) {

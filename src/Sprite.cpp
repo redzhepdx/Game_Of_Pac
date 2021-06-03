@@ -1,7 +1,7 @@
 #include "Sprite.h"
 
 
-Sprite::Sprite(uint32_t textureBufferID, const Vector2<float>& position) {
+Sprite::Sprite(uint32_t textureBufferID, const Vector2<float> &position) {
     m_TextureBufferID = textureBufferID;
     m_Position = position;
     m_RotationAngle = 0.0f;

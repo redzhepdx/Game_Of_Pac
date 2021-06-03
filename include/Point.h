@@ -19,7 +19,7 @@ private:
     float h_cost;
 
 public:
-    explicit Point(const Vector2<int32_t>& point) {
+    explicit Point(const Vector2<int32_t> &point) {
         m_Coordinate = point;
         f_cost = 0.0f;
         g_cost = 0.0f;
@@ -92,7 +92,7 @@ public:
 
 class ComparePointPQ {
 public:
-    bool operator()(const std::shared_ptr<Point>& first, const std::shared_ptr<Point>& second) {
+    bool operator()(const std::shared_ptr<Point> &first, const std::shared_ptr<Point> &second) {
         return first->get_f_cost() > second->get_f_cost();
     }
 };
@@ -106,7 +106,7 @@ public:
 
 class ComparePointSET {
 public:
-    bool operator()(const std::shared_ptr<Point>& first, const std::shared_ptr<Point>& second) {
+    bool operator()(const std::shared_ptr<Point> &first, const std::shared_ptr<Point> &second) {
         return first->m_Coordinate == second->m_Coordinate;
     }
 };

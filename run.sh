@@ -1,3 +1,4 @@
 #! /bin/sh
 
-cd out/build ; ./GameOfPack
+cd out/build
+./GameOfPack

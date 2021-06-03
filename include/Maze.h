@@ -8,7 +8,7 @@
 
 #include "Area.h"
 #include "Vector2.h"
-#include "config.h"
+#include "Config.h"
 #include "spdlog/spdlog.h"
 
 class Maze {
@@ -18,9 +18,9 @@ public:
     std::vector<std::vector<TileType>> m_Matrix;
 
 public:
-    TileType pos2Tile(const Vector2<float>& pos);
+    TileType pos2Tile(const Vector2<float> &pos);
 
-    [[nodiscard]] Vector2<int32_t> pos2MtrCoord(const Vector2<float>& pos) const;
+    [[nodiscard]] Vector2<int32_t> pos2MtrCoord(const Vector2<float> &pos) const;
 
     Maze(int32_t width, int32_t height);
 

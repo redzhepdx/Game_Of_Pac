@@ -1,8 +1,10 @@
 #ifndef __GAME_WINDOW__
 #define __GAME_WINDOW__
 
-#include "prefix.h"
-#include "config.h"
+#include "Prefix.h"
+#include "Config.h"
+
+#include "MemoryDebug.h"
 
 // Quadtree declarations
 typedef struct QuadTreeNode {
@@ -113,7 +115,8 @@ private:
 
     static bool checkObjectCollision(const std::unique_ptr<Area> &objectX, const std::unique_ptr<Area> &objectY);
 
-    [[maybe_unused]] static bool checkObjectCollision(const std::shared_ptr<Area> &objectX, const std::shared_ptr<Area> &objectY);
+    [[maybe_unused]] static bool
+    checkObjectCollision(const std::shared_ptr<Area> &objectX, const std::shared_ptr<Area> &objectY);
 
     bool isPositionValid(Vector2<int> &position, int32_t min_row, int32_t max_row, int32_t min_col, int32_t max_col);
 
@@ -144,7 +147,7 @@ public:
 
     void firePlayerBullet();
 
-    void fireEnemyBullet(const Vector2<float> &enemyPosition, const Vector2<float>& direction);
+    void fireEnemyBullet(const Vector2<float> &enemyPosition, const Vector2<float> &direction);
 
     void setGameStatus(bool status);
 
