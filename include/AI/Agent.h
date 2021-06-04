@@ -6,6 +6,7 @@
 #include <memory>
 #include <random>
 #include <ctime>
+#include <any>
 
 #define BOOST_NO_CXX11_SCOPED_ENUMS
 
@@ -54,6 +55,31 @@ private:
         m_Optimizer = std::make_unique<torch::optim::Adam>(network_parameters, LR_RATE);
     }
 
+private:
+    // Allocation Check Functions
+    std::function<void(std::unique_ptr<GameState>,
+                       std::unique_ptr<GameState>,
+                       int8_t, float, bool)> AllocationCheckMemoryAdd = ALLOCATION_CHECK_V(
+            [&](std::unique_ptr<GameState> curr_state, std::unique_ptr<GameState> nxt_state,
+                int8_t c_action, float c_reward, bool c_done) {
+                return m_Memory->add(std::move(curr_state),
+                                     std::move(nxt_state),
+                                     c_action, c_reward, c_done);
+            });
+
+    std::function<GroupTensorExperience()> AllocationCheckMemorySampling = ALLOCATION_CHECK_R([&]() {
+        return m_Memory->sample();
+    });
+
+    std::function<void(GroupTensorExperience)> AllocationCheckAgentLearn = ALLOCATION_CHECK_V(
+            [&](const GroupTensorExperience &experiences) {
+                return this->learn(experiences);
+            });
+
+    std::function<void()> AllocationCheckSaveNetworks = ALLOCATION_CHECK_V([&]() {
+        return this->saveNetworks();
+    });
+
 public:
     Agent(int32_t state_size, int32_t action_size, torch::Device device, ObservationType observation_type)
             : m_StateSize(state_size), m_ActionSize(action_size), m_Device(device),
@@ -91,13 +117,6 @@ public:
               int8_t action, float reward, bool done) {
 
         if (DEBUG_LOG) {
-            auto AllocationCheckMemoryAdd = ALLOCATION_CHECK_V(
-                    [&](std::unique_ptr<GameState> curr_state, std::unique_ptr<GameState> nxt_state,
-                        int8_t c_action, float c_reward, bool c_done) {
-                        return m_Memory->add(std::move(curr_state),
-                                             std::move(nxt_state),
-                                             c_action, c_reward, c_done);
-                    });
 
             AllocationCheckMemoryAdd(std::move(current_state), std::move(next_state), action, reward, done);
         } else {
@@ -107,15 +126,6 @@ public:
         if (m_Memory->capacity() > BATCH_SIZE && m_Step % TRAIN_EVERY == 0) {
             for (uint32_t sampling_iter = 0; sampling_iter < SAMPLING_ITERATION; ++sampling_iter) {
                 if (DEBUG_LOG) {
-
-                    auto AllocationCheckMemorySampling = ALLOCATION_CHECK_R([&]() {
-                        return m_Memory->sample();
-                    });
-
-                    auto AllocationCheckAgentLearn = ALLOCATION_CHECK_V(
-                            [&](const GroupTensorExperience &experiences) {
-                                return this->learn(experiences);
-                            });
 
                     GroupTensorExperience experiences = AllocationCheckMemorySampling();
                     AllocationCheckAgentLearn(experiences);
@@ -129,9 +139,6 @@ public:
 
         if (m_Step % SAVE_EVERY == 0 && m_Step > 0) {
             if (DEBUG_LOG) {
-                auto AllocationCheckSaveNetworks = ALLOCATION_CHECK_V([&]() {
-                    return this->saveNetworks();
-                });
                 AllocationCheckSaveNetworks();
             } else {
                 this->saveNetworks();
